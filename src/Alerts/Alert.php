@@ -239,7 +239,7 @@ class Alert
      */
     public function isActive()
     {
-        return $this->state === self:ACTIVE;
+        return $this->state === self::ACTIVE;
     }
 
     /**
@@ -263,7 +263,7 @@ class Alert
     }
 
     /**
-     * Build Alert object from JSON
+     * Build Alert objects from JSON
      *
      * @throws RuntimeException
      * @return Alert
@@ -274,21 +274,27 @@ class Alert
         if (!$json) {
             throw new \RuntimeException("Failed to parse JSON string");
         }
-        if (!isset($json->id, $json->labels)) {
-            throw new \RuntimeException("ID and Labels required.");
+        if (!\is_array($json)) {
+            $json = [$json];
         }
-        if (!isset($json->state)) {
-            $json->state = Alert::ACTIVE;
-        }
-        if (!isset($json->annotations)) {
-            $json->annotations = [];
-        }
-        if (!isset($json->createdAt)) {
-            $json->createdAt = \time();
-        }
+        foreach ($json as $a) {
+            if (!isset($a->id, $a->labels)) {
+                throw new \RuntimeException("ID and Labels required.");
+            }
+            if (!isset($a->state)) {
+                $a->state = Alert::ACTIVE;
+            }
+            if (!isset($a->annotations)) {
+                $a->annotations = [];
+            }
+            if (!isset($a->createdAt)) {
+                $a->createdAt = \time();
+            }
 
-        return new self($json->id, $json->state, $json->labels, $json->annotations,
-            $json->createdAt, isset($json->expiryDuration) ? $json->expiryDuration : $defaultExpiry);
+            $alerts[] = new self($a->id, $a->state, (array)$a->labels, (array)$a->annotations,
+                $a->createdAt, isset($a->expiryDuration) ? $a->expiryDuration : $defaultExpiry);
+        }
+        return $alerts;
     }
 
 }

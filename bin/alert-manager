@@ -2,13 +2,29 @@
 <?php
 require __DIR__ . '/../src/inc/bootstrap.php';
 
-use React\EventLoop\LoopInterface;
-use Psr\Log\LoggerInterface;
-use Psr\Container\ContainerInterface;
 use SeanKndy\AlertManager\Server;
+use SeanKndy\AlertManager\Receivers\Group;
+use SeanKndy\AlertManager\Receivers\Email;
+use SeanKndy\AlertManager\Routing\Router;
+use SeanKndy\AlertManager\Routing\LabelRoute;
+use SeanKndy\AlertManager\Routing\NullRoute;
 
-$loop = $container->get(LoopInterface::class);
+$loop = \React\EventLoop\Factory::create();
 
-$server = new Server($container->get('config')['listen'], $loop);
+$receivers = new Group([
+    new Email('skennedy@office.vcn.com'),
+    new Email('sean@kndy.net')
+]);
+
+$router = (new Router())
+    ->addRoute(LabelRoute::define(['locationname' => '/^CLIENTS..+/'], null))
+    ->addRoute($receivers);
+
+
+$server = new Server(
+    '0.0.0.0:8000',
+    $loop,
+    $router
+);
 
 $loop->run();

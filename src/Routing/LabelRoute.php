@@ -21,7 +21,7 @@ class LabelRoute extends AbstractRoute
         return true;
     }
 
-    public static function define($criteria, RoutableInterface $destination) : AbstractRoute
+    public static function define($criteria, ?RoutableInterface $destination = null) : AbstractRoute
     {
         $route = new self($destination);
         $route->setMatchers($criteria);

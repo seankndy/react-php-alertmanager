@@ -1,8 +1,9 @@
 <?php
 namespace SeanKndy\AlertManager;
 
+use SeanKndy\AlertManager\Alerts\Alert;
 use SeanKndy\AlertManager\Alerts\Queue;
-use SeanKndy\AlertManager\Alerts\RoutableInterface;
+use SeanKndy\AlertManager\Routing\RoutableInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use React\EventLoop\LoopInterface;
 use React\Http\Response as HttpResponse;
@@ -53,29 +54,45 @@ class Server
     {
         // only accept POST
         if ($request->getMethod() !== 'POST') {
-            return new HttpResponse(405);
+            return new HttpResponse(
+                405,
+                ['Content-Type' => 'application/json'],
+                \json_encode(['status' => 'error'])
+            );
         }
 
         // must have valid authorization key
         // should fire off code to verify $request->getHeaderLine('Authorization'));
 
-        // build Alert from request body
+        // build Alerts from request body
         try {
-            $alert = Alert::fromJSON((string)$request->getBody(), $this->defaultExpiryDuration);
-        } catch (Exception $e) {
-            return new HttpResponse(400);
+            $alerts = Alert::fromJSON((string)$request->getBody(), $this->defaultExpiryDuration);
+        } catch (\Throwable $e) {
+            var_dump($e->getMessage() . " " . $e->getFile() . " " . $e->getLine());
+            return new HttpResponse(
+                400,
+                ['Content-Type' => 'application/json'],
+                \json_encode(['status' => 'error'])
+            );
         }
 
-        // queue alert
-        $this->queue->enqueue($alert);
+        // queue alerts
+        foreach ($alerts as $alert) {
+            $this->queue->enqueue($alert);
+        }
 
         // return positivity
-        return new HttpResponse(201);
+        return new HttpResponse(
+            201,
+            ['Content-Type' => 'application/json'],
+            \json_encode(['status' => 'success'])
+        );
     }
 
     private function processQueue()
     {
         $promises = [];
+        echo "queue has " . \count($this->queue) . " entries\n";
         foreach ($this->queue as $alert) {
             if ($alert->isActive() && $alert->hasExpired()) {
                 // expire alert
@@ -94,7 +111,7 @@ class Server
             // process queue again
             $this->loop->addTimer(1.0, function() {
                 $this->processQueue();
-            })
+            });
         });
     }
 

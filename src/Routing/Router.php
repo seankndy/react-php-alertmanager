@@ -8,26 +8,17 @@ use SeanKndy\AlertManager\Alerts\Alert;
 class Router implements RoutableInterface
 {
     /**
-     * @var LoopInterface
-     */
-    private $loop;
-    /**
      * @var RouteInterface[]
      */
     private $routes = [];
 
-    public function __construct(LoopInterface $loop)
-    {
-        $this->loop = $loop;
-    }
-
     /**
      * {@inheritDoc}
      */
-    public function route(Alert $alert) : PromiseInterface
+    public function route(Alert $alert) : ?PromiseInterface
     {
         foreach ($this->routes as $route) {
-            if (($promise = $route->route($alert)) !== null) {
+            if ($promise = $route->route($alert)) {
                 return $promise;
             }
         }
@@ -39,7 +30,7 @@ class Router implements RoutableInterface
      *
      * @return self
      */
-    public function addRoute(AbstractRoute $route)
+    public function addRoute(RoutableInterface $route)
     {
         $this->routes[] = $route;
 

@@ -11,22 +11,22 @@ abstract class AbstractReceiver implements RoutableInterface
      * Schedules determing when the receiver is active
      * @var ScheduleInterface[]
      */
-    private $schedules = [];
+    protected $schedules = [];
     /**
      * How many seconds after initial notify to continually re-notify.
      * @var int
      */
-    private $repeatInterval = 86400
+    protected $repeatInterval = 86400;
     /**
      * Receive recovered alerts?
      * @var bool
      */
-    private $receiveRecoveries = true;
+    protected $receiveRecoveries = true;
     /**
      * Alert delay
      * @var int
      */
-    private $alertDelay = 310;
+    protected $alertDelay = 60;
 
     /**
      * Receive an Alert to act on it.
@@ -41,7 +41,7 @@ abstract class AbstractReceiver implements RoutableInterface
      * Implement RoutableInterface by dispatching the alert to this Receiver.
      *
      */
-    public function route(Alert $alert) : PromiseInterface
+    public function route(Alert $alert) : ?PromiseInterface
     {
         if (!$this->isReceivable($alert)) {
             return \React\Promise\resolve([]);
@@ -63,9 +63,9 @@ abstract class AbstractReceiver implements RoutableInterface
         }
 
         $minTime = $alert->getCreatedAt() + $this->alertDelay;
-        if ($this->isActivelyScheduled() && $minTime >= \time())) {
+        if ($this->isActivelyScheduled() && \time() >= $minTime) {
             $lastReceivedTime = $alert->getReceiverTransactionTime($this);
-            if ($lastReceivedTime && $lastReceivedTime+$this->repeatInterval < \time()) {
+            if ($lastReceivedTime && $lastReceivedTime+$this->repeatInterval > \time()) {
                 return false;
             }
             return true;
@@ -163,6 +163,10 @@ abstract class AbstractReceiver implements RoutableInterface
      */
     public function isActivelyScheduled()
     {
+        if (!$this->schedules) {
+            return true;
+        }
+
         foreach ($this->schedules as $schedule) {
             if ($schedule->isActive()) {
                 return true;

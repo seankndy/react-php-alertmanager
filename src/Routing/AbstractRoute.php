@@ -2,8 +2,9 @@
 namespace SeanKndy\AlertManager\Routing;
 
 use SeanKndy\AlertManager\Alerts\Alert;
+use React\Promise\PromiseInterface;
 
-abstract class AbstractRoute
+abstract class AbstractRoute implements RoutableInterface
 {
     /**
      * @var RoutableInterface
@@ -20,10 +21,13 @@ abstract class AbstractRoute
      */
     public function route(Alert $alert) : ?PromiseInterface
     {
-        if (!$destination || !$this->matches($alert)) {
-            return null;
+        if (!$this->matches($alert)) {
+            return null; // not routable by this route, return NULL
         }
-        return $destination->route($alert);
+        if (!$this->destination) {
+            return \React\Promise\resolve([]);
+        }
+        return $this->destination->route($alert);
     }
 
     /**
@@ -31,7 +35,7 @@ abstract class AbstractRoute
      *
      * @return bool
      */
-    abstract protected function matches(Alert $alert) : bool
+    abstract protected function matches(Alert $alert) : bool;
 
     /**
      * Create new AbstractRoute and return it
@@ -39,5 +43,5 @@ abstract class AbstractRoute
      * @return AbstractRoute
      */
     abstract public static function define($criteria,
-        RoutableInterface $destination) : AbstractRoute;
+        ?RoutableInterface $destination = null) : AbstractRoute;
 }

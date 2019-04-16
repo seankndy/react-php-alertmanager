@@ -1,7 +1,7 @@
 <?php
-namespace SeanKndy\Alerter\Receivers;
+namespace SeanKndy\AlertManager\Receivers;
 
-use SeanKndy\Alerter\Alert;
+use SeanKndy\AlertManager\Alerts\Alert;
 use React\Promise\PromiseInterface;
 
 class Email extends AbstractReceiver
@@ -19,11 +19,22 @@ class Email extends AbstractReceiver
      */
     protected $messageTemplate;
 
+    public function __construct(string $emailAddress)
+    {
+        $this->emailAddress = $emailAddress;
+    }
+
     /**
      * {@inheritDoc}
      */
     public function receive(Alert $alert) : PromiseInterface
     {
-        ;
+        echo "routing to {$this->emailAddress}!\n";
+        $msg = "";
+        foreach ($alert->getLabels() as $key => $label) {
+            $msg .= "$key: $label\n";
+        }
+        //\mail($this->emailAddress, 'alert', $msg);
+        return \React\Promise\resolve([]);
     }
 }

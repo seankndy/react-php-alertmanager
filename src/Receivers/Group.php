@@ -14,13 +14,13 @@ class Group implements RoutableInterface
 
     public function __construct(array $receivers = [])
     {
-        $this->receivers = $receiver;
+        $this->receivers = $receivers;
     }
 
     /**
      * {@inheritDoc}
      */
-    public function route(Alert $alert) : PromiseInterface
+    public function route(Alert $alert) : ?PromiseInterface
     {
         $promises = [];
         foreach ($this->receivers as $receiver) {

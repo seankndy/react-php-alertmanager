@@ -4,12 +4,13 @@ namespace SeanKndy\AlertManager\Routing;
 use SeanKndy\AlertManager\Alerts\Alert;
 use React\Promise\PromiseInterface;
 
-class RoutableInterface
+interface RoutableInterface
 {
     /**
      * Handle routing of Alert $alert
      *
-     * @return PromiseInterface
+     * @return PromiseInterface\null Should return a Promise or NULL if $alert
+     *     is not consumable/routable by the RoutableInterface.
      */
-    public function route(Alert $alert) : PromiseInterface;
+    public function route(Alert $alert) : ?PromiseInterface;
 }
