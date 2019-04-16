@@ -1,0 +1,20 @@
+{
+    "name": "seankndy/alert-manager",
+    "description": "async (reactphp) alert routing/dispatching",
+    "type": "project",
+    "require": {
+        "php": ">=7.1",
+        "react/http": "^0.8.4",
+        "php-di/php-di": "^6.0",
+        "monolog/monolog": "^1.24"
+    },
+    "autoload": {
+        "psr-4": {"SeanKndy\\AlertManager\\": "src/"}
+    },
+    "authors": [
+        {
+            "name": "Sean Kennedy",
+            "email": "sean@kndy.net"
+        }
+    ]
+}

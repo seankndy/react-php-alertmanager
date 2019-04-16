@@ -1,0 +1,14 @@
+#!/usr/bin/env php
+<?php
+require __DIR__ . '/../src/inc/bootstrap.php';
+
+use React\EventLoop\LoopInterface;
+use Psr\Log\LoggerInterface;
+use Psr\Container\ContainerInterface;
+use SeanKndy\AlertManager\Server;
+
+$loop = $container->get(LoopInterface::class);
+
+$server = new Server($container->get('config')['listen'], $loop);
+
+$loop->run();
