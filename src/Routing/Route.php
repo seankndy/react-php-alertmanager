@@ -11,7 +11,7 @@ class Route implements RoutableInterface
      */
     protected $destination = null;
     /**
-     * @var RouteCriteria
+     * @var Criteria
      */
     protected $criteria = null;
 
@@ -38,7 +38,7 @@ class Route implements RoutableInterface
     public function where($key, $match = null)
     {
         if (!$this->criteria) {
-            $this->criteria = new RouteCriteria();
+            $this->criteria = new Criteria();
         }
         $this->criteria = $this->criteria->where($key, $match);
         return $this;
@@ -56,6 +56,16 @@ class Route implements RoutableInterface
         }
         $this->criteria = $this->criteria->orWhere($key, $match);
         return $this;
+    }
+
+    /**
+     * Get value of criteria
+     *
+     * @return Criteria|null
+     */
+    public function getCriteria()
+    {
+        return $this->criteria;
     }
 
     /**

@@ -1,7 +1,9 @@
 <?php
 namespace SeanKndy\AlertManager\Routing;
 
-class RouteCriteria
+use SeanKndy\AlertManager\Alerts\Alert;
+
+class Criteria
 {
     const AND = 'AND';
     const OR  = 'OR';
@@ -23,9 +25,9 @@ class RouteCriteria
     /**
      * Add criteria
      *
-     * @param string\RouteCriteria $key Either attribute key or another
-     *      RouteCriteria
-     * @param mixed $match Value for $key to match or null if key is RouteCriteria
+     * @param string\Criteria $key Either attribute key or another
+     *      Criteria
+     * @param mixed $match Value for $key to match or null if key is Criteria
      *
      * @return self
      */
@@ -34,18 +36,14 @@ class RouteCriteria
         if ($key instanceof self) {
             $this->criteria[] = $key;
         } else {
-            if (substr($key, 0, 6) == 'regex:') {
-                $this->criteria[] = [substr($key, 6) => $match];
-            } else {
-                $this->criteria[] = [$key => $match];
-            }
+            $this->criteria[] = [$key => $match];
         }
 
         return $this;
     }
 
     /**
-     * @return RouteCriteria
+     * @return Criteria
      */
     public function where($key, $match = null)
     {
@@ -70,7 +68,7 @@ class RouteCriteria
     }
 
     /**
-     * @return RouteCriteria
+     * @return Criteria
      */
     public function orWhere($key, $match = null)
     {
@@ -96,7 +94,7 @@ class RouteCriteria
     }
 
     /**
-     * Does $alert match this RouteCriteria?
+     * Does $alert match this Criteria?
      *
      * @return bool
      */
@@ -117,14 +115,20 @@ class RouteCriteria
                     return false;
                 }
             } else {
-                list($key,$match) = $criteria;
+                $key = \key($criteria);
+                $match = \current($criteria);
+
+                $regex = false;
+                if (substr($key, 0, 6) == 'regex:') {
+                    $key = substr($key, 6);
+                    $regex = true;
+                }
 
                 if ($this->isAnd() && !isset($attributes[$key])) {
                     return false;
                 }
 
-                if (substr($key, 0, 6) == 'regex:') {
-                    $key = substr($key, 6);
+                if ($regex) {
                     if (\preg_match($match, $attributes[$key])) {
                         if ($this->isOr()) {
                             return true;
@@ -133,7 +137,7 @@ class RouteCriteria
                         return false;
                     }
                 } else {
-                    if (\is_array($match)) {
+                    if (!\is_array($match)) {
                         $match = [$match];
                     }
                     if (\in_array($attributes[$key], $match)) {
@@ -147,7 +151,7 @@ class RouteCriteria
             }
         }
 
-        return true;
+        return $this->isOr() ? false : true;
     }
 
     public function isOr()
