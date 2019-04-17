@@ -1,12 +1,10 @@
 {
-    "name": "seankndy/alert-manager",
+    "name": "seankndy/react-php-alertmanager",
     "description": "async (reactphp) alert routing/dispatching",
     "type": "project",
     "require": {
         "php": ">=7.1",
-        "react/http": "^0.8.4",
-        "php-di/php-di": "^6.0",
-        "monolog/monolog": "^1.24"
+        "react/http": "^0.8.4"
     },
     "autoload": {
         "psr-4": {"SeanKndy\\AlertManager\\": "src/"}
