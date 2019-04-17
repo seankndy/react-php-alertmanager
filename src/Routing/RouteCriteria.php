@@ -15,11 +15,20 @@ class RouteCriteria
      */
     private $logic = self::AND;
 
-    public function __construct(string $logic)
+    public function __construct(string $logic = self::AND)
     {
         $this->logic = $logic;
     }
 
+    /**
+     * Add criteria
+     *
+     * @param string\RouteCriteria $key Either attribute key or another
+     *      RouteCriteria
+     * @param mixed $match Value for $key to match or null if key is RouteCriteria
+     *
+     * @return self
+     */
     public function add($key, $match = null)
     {
         if ($key instanceof self) {
@@ -31,8 +40,52 @@ class RouteCriteria
                 $this->criteria[] = [$key => $match];
             }
         }
+
+        return $this;
     }
 
+    /**
+     * @return RouteCriteria
+     */
+    public function where($key, $match = null)
+    {
+        if (\is_callable($key)) {
+            $criteria = (new self())
+                ->add($this)
+                ->add($newCriteria = new self());
+            $key($newCriteria);
+            return $criteria;
+        } else {
+            $this->add($key, $match);
+            return $this;
+        }
+    }
+
+    /**
+     * @return RouteCriteria
+     */
+    public function orWhere($key, $match = null)
+    {
+        if (\is_callable($key)) {
+            $criteria = (new self(self::OR))
+                ->add($this)
+                ->add($newCriteria = new self());
+            $key($newCriteria);
+            return $criteria;
+        } else {
+            $criteria = (new self(self::OR))
+                ->add($this)
+                ->add($newCriteria = new self());
+            $newCriteria->add($key, $match);
+            return $criteria;
+        }
+    }
+
+    /**
+     * Does $alert match this RouteCriteria?
+     *
+     * @return bool
+     */
     public function matches(Alert $alert)
     {
         if (!$this->criteria)

@@ -11,67 +11,51 @@ class Route implements RoutableInterface
      */
     protected $destination = null;
     /**
-     * @var RouteCriteria[]
+     * @var RouteCriteria
      */
-    protected $criteria = [];
+    protected $criteria = null;
 
-    public function __construct(string $key, $match)
+    public function __construct(RoutableInterface $destination = null)
     {
-        $this->
+        $this->destination = $destination;
     }
 
     /**
-     * Set destination
+     * Create Route for destination $receiver
+     *
+     * @return Route
+     */
+    public static function toDestination(RoutableInterface $destination = null)
+    {
+        return new self($destination);
+    }
+
+    /**
+     * Define AND criteria
      *
      * @return self
      */
-    public function destination(RoutableInterface $destination = null)
-    {
-        $this->destination = $destination;
-
-        return $this;
-    }
-
-    public function addCriteria(string $key, $match, string $logic = RouteCriteria::OR)
-    {
-        if (!$this->criteria) {
-            $this->criteria[] = ($criteria = new RouteCriteria($logic));
-        } else {
-            $criteria = $this->criteria[count($this->criteria)-1];
-            // if last criteria has new logic, make new criteria object
-            // otherwise we'll reuse it
-            if ($criteria->getLogic() != $logic) {
-                $this->criteria[] = ($criteria = new RouteCriteria($logic));
-            }
-        }
-
-        $criteria->add($key, $match);
-        if (substr($key, 0, 6) == 'regex:') {
-            $this->criteria[substr($key, 6)] = $match;
-        } else {
-            $this->criteria[$key] = $match;
-        }
-    }
-
     public function where($key, $match = null)
     {
         if (!$this->criteria) {
-            $this->criteria[] = ($criteria = new RouteCriteria(RouteCriteria::AND));
-        } else {
-            $criteria = $this->criteria[count($this->criteria)-1];
+            $this->criteria = new RouteCriteria();
         }
+        $this->criteria = $this->criteria->where($key, $match);
+        return $this;
+    }
 
-        if (\is_callable($key)) {
-            $key($criteria); 
+    /**
+     * Define OR criteria
+     *
+     * @return self
+     */
+    public function orWhere($key, $match = null)
+    {
+        if (!$this->criteria) {
+            throw new \RuntimeException("Cannot call orWhere() before where()");
         }
-        $criteria->add($key, $match);
-        if (substr($key, 0, 6) == 'regex:') {
-            $this->criteria[substr($key, 6)] = $match;
-        } else {
-            $this->criteria[$key] = $match;
-        }
-
-
+        $this->criteria = $this->criteria->orWhere($key, $match);
+        return $this;
     }
 
     /**
@@ -79,7 +63,7 @@ class Route implements RoutableInterface
      */
     public function route(Alert $alert) : ?PromiseInterface
     {
-        if (!$this->matches($alert)) {
+        if (!$this->criteria || !$this->criteria->matches($alert)) {
             return null; // not routable by this route, return NULL
         }
         if (!$this->destination) {
@@ -87,19 +71,4 @@ class Route implements RoutableInterface
         }
         return $this->destination->route($alert);
     }
-
-    /**
-     * Determine if $alert matches this route
-     *
-     * @return bool
-     */
-    abstract protected function matches(Alert $alert) : bool;
-
-    /**
-     * Create new AbstractRoute and return it
-     *
-     * @return AbstractRoute
-     */
-    abstract public static function define($criteria,
-        ?RoutableInterface $destination = null) : AbstractRoute;
 }

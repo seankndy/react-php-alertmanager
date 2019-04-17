@@ -6,7 +6,7 @@ use SeanKndy\AlertManager\Server;
 use SeanKndy\AlertManager\Receivers\Group;
 use SeanKndy\AlertManager\Receivers\Email;
 use SeanKndy\AlertManager\Routing\Router;
-use SeanKndy\AlertManager\Routing\AttrRoute;
+use SeanKndy\AlertManager\Routing\Route;
 
 $loop = \React\EventLoop\Factory::create();
 
@@ -20,14 +20,18 @@ $allReceivers = new Group([
 //
 // first route that matches stops the route chain
 //
+/*
 $router = (new Router())
     ->addRoute(AttrRoute::define(['service_id' => 10], $receiverA))
     ->addRoute(AttrRoute::define(['port_id' => 15], $receiverB))
     ->addRoute(AttrRoute::define(['regex:locationname' => '/^CLIENTS..+/'], null));
 //    ->addRoute($allReceivers);
+*/
+
 
 // should result in:
 // (service_id in(10,15) or joe=blow or jim=queen) and (loc=gltt or loc=shrd)
+/*
 Route::destination($receiverA)
     ->where('service_id', [10,15])
     ->or('joe', 'blow')
@@ -45,24 +49,18 @@ Route::toReceiver($receiverA)
         $criteria->where('loc', 'gltt')
             ->orWhere('loc', 'shrd');
     });
+*/
 
 // (service_id in(10,15) or joe=blow or jim=queen) and (loc=gltt or loc=shrd)
-Route::toReceiver($receiverA)
+print_r(Route::toDestination($receiverA)
     ->where('service_id', [10,15])
     ->orWhere('joe', 'blow')
     ->orWhere('jim', 'queen')
     ->where(function ($criteria) {
         $criteria->where('loc', 'gltt')
             ->orWhere('loc', 'shrd');
-    });
-
-Route::attr('service_id', [10,15])
-    ->and('joe', 'blow')
-    ->and('jim', 'queen')
-    ->
-    ->or('loc', 'gltt')
-    ->or('loc', 'shrd')
-    ->destination($receiverA);
+    })
+);
 
 $server = new Server(
     '0.0.0.0:8000',
