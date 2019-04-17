@@ -58,10 +58,11 @@ print_r(Route::toDestination($receiverA)
     ->orWhere('jim', 'queen')
     ->where(function ($criteria) {
         $criteria->where('loc', 'gltt')
-            ->orWhere('loc', 'shrd');
+            ->orWhere('loc', 'shrd')
+            ->orWhere('loc', 'dnvr');
     })
 );
-
+/*
 $server = new Server(
     '0.0.0.0:8000',
     $loop,
@@ -69,3 +70,4 @@ $server = new Server(
 );
 
 $loop->run();
+*/
