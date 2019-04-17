@@ -39,17 +39,19 @@ Route::destination($receiverA)
     ->and('loc', 'gltt')
     ->or('loc', 'shrd')
     ->destination($receiverA);
+*/
 
 // (service_id in(10,15) and joe=blow and jim=queen) and (loc=gltt or loc=shrd)
-Route::toReceiver($receiverA)
+print_r(Route::toDestination($receiverA)
     ->where('service_id', [10,15])
     ->where('joe', 'blow')
     ->where('jim', 'queen')
     ->where(function ($criteria) {
-        $criteria->where('loc', 'gltt')
+        return $criteria->where('loc', 'gltt')
             ->orWhere('loc', 'shrd');
-    });
-*/
+    })
+);
+
 
 // (service_id in(10,15) or joe=blow or jim=queen) and (loc=gltt or loc=shrd)
 print_r(Route::toDestination($receiverA)
