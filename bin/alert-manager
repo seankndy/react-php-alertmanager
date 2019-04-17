@@ -57,7 +57,7 @@ print_r(Route::toDestination($receiverA)
     ->orWhere('joe', 'blow')
     ->orWhere('jim', 'queen')
     ->where(function ($criteria) {
-        $criteria->where('loc', 'gltt')
+        return $criteria->where('loc', 'gltt')
             ->orWhere('loc', 'shrd')
             ->orWhere('loc', 'dnvr');
     })

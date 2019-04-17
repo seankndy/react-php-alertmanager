@@ -53,7 +53,7 @@ class RouteCriteria
             $criteria = (new self())
                 ->add($this)
                 ->add($newCriteria = new self());
-            $key($newCriteria);
+            $newCriteria = $key($newCriteria);
             return $criteria;
         } else {
             $this->add($key, $match);
@@ -70,7 +70,7 @@ class RouteCriteria
             $criteria = (new self(self::OR))
                 ->add($this)
                 ->add($newCriteria = new self());
-            $key($newCriteria);
+            $newCriteria = $key($newCriteria);
             return $criteria;
         } else {
             if ($this->isOr()) {
