@@ -51,10 +51,9 @@ class RouteCriteria
     {
         if (\is_callable($key)) {
             $criteria = (new self())
-                ->add($this)
-                ->add($newCriteria = new self());
+                ->add($this);
             $newCriteria = $key($newCriteria);
-            return $criteria;
+            return $criteria->add($newCriteria);
         } else {
             $this->add($key, $match);
             return $this;
@@ -68,10 +67,9 @@ class RouteCriteria
     {
         if (\is_callable($key)) {
             $criteria = (new self(self::OR))
-                ->add($this)
-                ->add($newCriteria = new self());
+                ->add($this);
             $newCriteria = $key($newCriteria);
-            return $criteria;
+            return $criteria->add($newCriteria);
         } else {
             if ($this->isOr()) {
                 $this->add($key, $match);
