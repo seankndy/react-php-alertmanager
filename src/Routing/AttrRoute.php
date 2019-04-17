@@ -9,13 +9,19 @@ class AttrRoute extends AbstractRoute
     private $regexMatchers = [];
 
     /**
-     * {@inheritDoc} Must match all $matchers defined (AND not OR)
+     * {@inheritDoc} Must match all matchers defined (AND not OR)
      */
     protected function matches(Alert $alert) : bool
     {
         $attributes = $alert->getAttributes();
         foreach ($this->equals as $key => $equal) {
-            if (!isset($attributes[$key]) || $attributes[$key] != $equal)) {
+            if (!isset($attributes[$key])) {
+                return false;
+            }
+            if (\is_array($equal) && !\in_array($attributes[$key], $equal)) {
+                return false;
+            }
+            if ($attributes[$key] != $equal) {
                 return false;
             }
         }
