@@ -4,6 +4,7 @@ namespace SeanKndy\AlertManager\Receivers;
 use React\Promise\PromiseInterface;
 use SeanKndy\AlertManager\Alerts\Alert;
 use SeanKndy\AlertManager\Routing\RoutableInterface;
+use SeanKndy\AlertManager\Scheduling\ScheduleInterface;
 
 abstract class AbstractReceiver implements RoutableInterface
 {
