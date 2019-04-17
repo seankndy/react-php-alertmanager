@@ -44,4 +44,16 @@ abstract class AbstractRoute implements RoutableInterface
      */
     abstract public static function define($criteria,
         ?RoutableInterface $destination = null) : AbstractRoute;
+
+    /**
+     * Set destination
+     *
+     * @return self
+     */
+    public function destination($destination)
+    {
+        $this->destination = $destination;
+
+        return $this;
+    }
 }
