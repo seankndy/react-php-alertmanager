@@ -11,14 +11,21 @@ use SeanKndy\AlertManager\Routing\NullRoute;
 
 $loop = \React\EventLoop\Factory::create();
 
-$receivers = new Group([
-    new Email('skennedy@office.vcn.com'),
-    new Email('sean@kndy.net')
+$receiverA = new Email('skennedy@office.vcn.com');
+$receiverB = new Email('sean@kndy.net');
+
+$allReceivers = new Group([
+    $receiverA, $receiverB
 ]);
 
+//
+// first route that matches stops the route chain
+//
 $router = (new Router())
-    ->addRoute(LabelRoute::define(['locationname' => '/^CLIENTS..+/'], null))
-    ->addRoute($receivers);
+    ->addRoute(AttrRoute::define(['service_id' => 10], $receiverA))
+    ->addRoute(AttrRoute::define(['port_id' => 15], $receiverB))
+    ->addRoute(AttrRoute::define(['regex:locationname' => '/^CLIENTS..+/'], null))
+    ->addRoute($allReceivers);
 
 
 $server = new Server(

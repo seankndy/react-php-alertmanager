@@ -20,11 +20,7 @@ class Alert
     /**
      * @var array
      */
-    protected $labels = [];
-    /**
-     * @var array
-     */
-    protected $annotations = [];
+    protected $attributes = [];
     /**
      * @var int
      */
@@ -38,13 +34,12 @@ class Alert
      */
     private $receiverTransactions;
 
-    public function __construct($id, int $state, array $labels, array $annotations = [],
+    public function __construct($id, int $state, array $attributes,
         int $createdAt = 0, int $expiryDuration = 600)
     {
         $this->id = $id;
         $this->state = $state;
-        $this->labels = $labels;
-        $this->annotations = $annotations;
+        $this->attributes = $attributes;
         $this->createdAt = $createdAt ? $createdAt : \time();
         $this->expiryDuration = $expiryDuration;
         $this->receiverTransactions = new \SplObjectStorage();
@@ -85,54 +80,6 @@ class Alert
         $this->id = $id;
 
         return $this;
-    }
-
-    /**
-     * Set the value of Labels
-     *
-     * @param array labels
-     *
-     * @return self
-     */
-    public function setLabels(array $labels)
-    {
-        $this->labels = $labels;
-
-        return $this;
-    }
-
-    /**
-     * Get the value of Labels
-     *
-     * @return array
-     */
-    public function getLabels()
-    {
-        return $this->labels;
-    }
-
-    /**
-     * Set the value of Annotations
-     *
-     * @param array annotations
-     *
-     * @return self
-     */
-    public function setAnnotations(array $annotations)
-    {
-        $this->annotations = $annotations;
-
-        return $this;
-    }
-
-    /**
-     * Get the value of Annotations
-     *
-     * @return array
-     */
-    public function getAnnotations()
-    {
-        return $this->annotations;
     }
 
     /**
@@ -278,23 +225,68 @@ class Alert
             $json = [$json];
         }
         foreach ($json as $a) {
-            if (!isset($a->id, $a->labels)) {
-                throw new \RuntimeException("ID and Labels required.");
+            if (!isset($a->id, $a->attributes)) {
+                throw new \RuntimeException("ID and Attributes required.");
             }
             if (!isset($a->state)) {
                 $a->state = Alert::ACTIVE;
-            }
-            if (!isset($a->annotations)) {
-                $a->annotations = [];
             }
             if (!isset($a->createdAt)) {
                 $a->createdAt = \time();
             }
 
-            $alerts[] = new self($a->id, $a->state, (array)$a->labels, (array)$a->annotations,
-                $a->createdAt, isset($a->expiryDuration) ? $a->expiryDuration : $defaultExpiry);
+            $alerts[] = new self($a->id, $a->state, (array)$a->attributes, $a->createdAt,
+                isset($a->expiryDuration) ? $a->expiryDuration : $defaultExpiry);
         }
         return $alerts;
+    }
+
+    /**
+     * Set the value of Attributes
+     *
+     * @param array attributes
+     *
+     * @return self
+     */
+    public function setAttributes(array $attributes)
+    {
+        $this->attributes = $attributes;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of Attributes
+     *
+     * @return array
+     */
+    public function getAttributes()
+    {
+        return $this->attributes;
+    }
+
+    /**
+     * Set the value of Expiry Duration
+     *
+     * @param int expiryDuration
+     *
+     * @return self
+     */
+    public function setExpiryDuration(int $expiryDuration)
+    {
+        $this->expiryDuration = $expiryDuration;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of Expiry Duration
+     *
+     * @return int
+     */
+    public function getExpiryDuration()
+    {
+        return $this->expiryDuration;
     }
 
 }

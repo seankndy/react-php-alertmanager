@@ -31,7 +31,7 @@ class Email extends AbstractReceiver
     {
         echo "routing to {$this->emailAddress}!\n";
         $msg = "";
-        foreach ($alert->getLabels() as $key => $label) {
+        foreach ($alert->getAttributes() as $key => $label) {
             $msg .= "$key: $label\n";
         }
         //\mail($this->emailAddress, 'alert', $msg);
