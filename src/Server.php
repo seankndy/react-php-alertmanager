@@ -98,13 +98,15 @@ class Server
                 // expire alert
                 $alert->setState(Alert::RECOVERED);
             }
-            $promises[] = $this->router->route($alert);
+            if (!$alert->isDeleted()) {
+                $promises[] = $this->router->route($alert);
+            }
         }
 
         \React\Promise\all($promises)->always(function() {
-            // remove recovered alerts
+            // remove deleted and recovered alerts
             foreach ($this->queue as $key => $alert) {
-                if ($alert->isRecovered()) {
+                if (!$alert->isActive()) {
                     unset($this->queue[$key]);
                 }
             }

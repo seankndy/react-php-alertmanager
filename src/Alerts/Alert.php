@@ -8,6 +8,7 @@ class Alert
 {
     const ACTIVE = 1;
     const RECOVERED = 2;
+    const DELETED = 3;
 
     /**
      * @var int
@@ -197,6 +198,16 @@ class Alert
     public function isRecovered()
     {
         return $this->state === self::RECOVERED;
+    }
+
+    /**
+     * Helper to determine if state == DELETED
+     *
+     * @return bool
+     */
+    public function isDeleted()
+    {
+        return $this->state === self::DELETED;
     }
 
     /**

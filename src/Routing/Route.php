@@ -77,6 +77,10 @@ class Route implements RoutableInterface
             return null; // not routable by this route, return NULL
         }
         if (!$this->destination) {
+            // if alert null-routed, then we can just delete
+            // the alert entirely as it will never route to any
+            // receiver.
+            $alert->setState(Alert::DELETED);
             return \React\Promise\resolve([]);
         }
         return $this->destination->route($alert);

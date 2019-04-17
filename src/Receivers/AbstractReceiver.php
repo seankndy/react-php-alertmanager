@@ -28,7 +28,7 @@ abstract class AbstractReceiver implements RoutableInterface
      * Alert delay
      * @var int
      */
-    protected $alertDelay = 60;
+    protected $alertDelay = 20;
 
     /**
      * Receive an Alert to act on it.
@@ -60,8 +60,8 @@ abstract class AbstractReceiver implements RoutableInterface
      */
     public function isReceivable(Alert $alert)
     {
-        if ($alert->isRecovered() && !$this->receiveRecoveries) {
-            return false;
+        if ($alert->isRecovered()) {
+            return $this->receiveRecoveries && $this->isActivelyScheduled();
         }
 
         $minTime = $alert->getCreatedAt() + $this->alertDelay;
