@@ -2,8 +2,10 @@ alerts1='[
   {
     "id": "12313423",
     "attributes": {
-       "alertname": "DNVRCO.CMFL.ARST.PortChannel2.ifStatus/HS/Err",
-       "devicename": "DNVRCO.CMFL.ARST",
+       "service_id": "10",
+       "port_id": "132",
+       "location_name": "DNVRCO.CMFL"
+       "device_name": "ARST",
        "severity": "CRIT"
        "info": "ifStatus/HS/Err for DNVRCO.CMFL.ARST.PortChannel2 is now CRIT",
        "summary": "blah blah blah"
@@ -12,11 +14,13 @@ alerts1='[
   {
     "id": "1231342323",
     "attributes": {
-       "alertname": "DNVRCO.CMFL.ARST.Et1.ifStatus/HS/Err",
-       "devicename": "DNVRCO.CMFL.ARST",
-       "severity": "UNKNOWN"
-       "info": "ifStatus/HS/Err for DNVRCO.CMFL.ARST.Et1 is now UNKNOWN",
-       "summary": "blah blah blah"
+        "service_id": "11",
+        "port_id": "15",
+        "location_name": "CLIENTS.BLACKFOOT"
+        "device_name": "RB2011",
+        "severity": "CRIT"
+        "info": "ifStatus/HS/Err for CLIENTS.BLACKFOOT.RB2011 is now CRIT",
+        "summary": "blah blah blah"
     }
   }
 ]'

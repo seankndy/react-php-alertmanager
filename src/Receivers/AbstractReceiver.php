@@ -10,6 +10,7 @@ abstract class AbstractReceiver implements RoutableInterface
 {
     /**
      * Schedules determing when the receiver is active
+     * An empty schedule means always on-call/active
      * @var ScheduleInterface[]
      */
     protected $schedules = [];
