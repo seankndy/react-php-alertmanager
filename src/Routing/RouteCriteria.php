@@ -73,11 +73,16 @@ class RouteCriteria
             $key($newCriteria);
             return $criteria;
         } else {
-            $criteria = (new self(self::OR))
-                ->add($this)
-                ->add($newCriteria = new self());
-            $newCriteria->add($key, $match);
-            return $criteria;
+            if ($this->isOr()) {
+                $this->add($key, $match);
+                return $this;
+            } else {
+                $criteria = (new self(self::OR))
+                    ->add($this)
+                    ->add($newCriteria = new self());
+                $newCriteria->add($key, $match);
+                return $criteria;
+            }
         }
     }
 
