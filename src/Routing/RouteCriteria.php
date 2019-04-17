@@ -56,6 +56,14 @@ class RouteCriteria
             $newCriteria = $key($newCriteria);
             return $criteria->add($newCriteria);
         } else {
+            if ($this->isOr()) {
+                $criteria = (new self())
+                    ->add($this)
+                    ->add($newCriteria = new self());
+                $newCriteria->add($key, $match);
+                return $criteria;
+            }
+
             $this->add($key, $match);
             return $this;
         }

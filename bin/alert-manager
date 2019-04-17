@@ -52,6 +52,17 @@ print_r(Route::toDestination($receiverA)
     })
 );
 
+print_r(Route::toDestination($receiverA)
+    ->where('service_id', [10,15])
+    ->where('joe', 'blow')
+    ->orWhere('jim', 'queen')
+    ->where(function ($criteria) {
+        return $criteria->where('age', 31)
+            ->where('sex', 'male')
+            ->orWhere('hair', 'brown');
+    })
+);
+
 
 // (service_id in(10,15) or joe=blow or jim=queen) and (loc=gltt or loc=shrd)
 print_r(Route::toDestination($receiverA)
