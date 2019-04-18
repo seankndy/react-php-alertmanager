@@ -25,10 +25,10 @@ abstract class AbstractReceiver implements RoutableInterface
      */
     protected $receiveRecoveries = true;
     /**
-     * Alert delay
+     * Alert delay - initial time for receiver to refuse an alert
      * @var int
      */
-    protected $alertDelay = 20;
+    protected $alertDelay = 10;
 
     /**
      * Receive an Alert to act on it.
@@ -61,12 +61,19 @@ abstract class AbstractReceiver implements RoutableInterface
     public function isReceivable(Alert $alert)
     {
         if ($alert->isRecovered()) {
-            return $this->receiveRecoveries && $this->isActivelyScheduled();
+            // only send recovery if:
+            // 1) receiveRecoveries is ON
+            // 2) receiver is on an activated schedule
+            // 3) receiver received the active form of alert already
+            return $this->receiveRecoveries && $this->isActivelyScheduled() &&
+                $alert->getReceiverTransactionTime($this);
         }
 
         $minTime = $alert->getCreatedAt() + $this->alertDelay;
         if ($this->isActivelyScheduled() && \time() >= $minTime) {
             $lastReceivedTime = $alert->getReceiverTransactionTime($this);
+            //var_dump(\get_class($this));
+            //echo "id: " . $alert->getId() . "; lastReceivedTime: " . var_dump($lastReceivedTime) . "\n";
             if ($lastReceivedTime && $lastReceivedTime+$this->repeatInterval > \time()) {
                 return false;
             }

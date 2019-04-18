@@ -4,7 +4,9 @@
     "type": "project",
     "require": {
         "php": ">=7.1",
-        "react/http": "^0.8.4"
+        "react/http": "^0.8.4",
+        "react/child-process": "^0.6.1",
+        "swiftmailer/swiftmailer": "^6.2"
     },
     "autoload": {
         "psr-4": {"SeanKndy\\AlertManager\\": "src/"}

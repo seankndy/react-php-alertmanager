@@ -6,9 +6,9 @@ use SeanKndy\AlertManager\Receivers\AbstractReceiver;
 
 class Alert
 {
-    const ACTIVE = 1;
-    const RECOVERED = 2;
-    const DELETED = 3;
+    const ACTIVE = 'ACTIVE';
+    const RECOVERED = 'RECOVERED';
+    const DELETED = 'DELETED';
 
     /**
      * @var int
@@ -29,19 +29,25 @@ class Alert
     /**
      * @var int
      */
+    protected $updatedAt;
+    /**
+     * This value + $updatedAt = time to mark alert expired
+     * @var int
+     */
     protected $expiryDuration;
     /**
      * @var \SplObjectStorage
      */
     private $receiverTransactions;
 
-    public function __construct($id, int $state, array $attributes,
+    public function __construct($id, string $state, array $attributes,
         int $createdAt = 0, int $expiryDuration = 600)
     {
         $this->id = $id;
         $this->state = $state;
         $this->attributes = $attributes;
         $this->createdAt = $createdAt ? $createdAt : \time();
+        $this->updatedAt = $this->createdAt;
         $this->expiryDuration = $expiryDuration;
         $this->receiverTransactions = new \SplObjectStorage();
     }
@@ -108,13 +114,37 @@ class Alert
     }
 
     /**
-     * Set the value of State
+     * Set the value of Update At
      *
-     * @param int state
+     * @param int updatedAt
      *
      * @return self
      */
-    public function setState(int $state)
+    public function setUpdatedAt(int $updatedAt)
+    {
+        $this->updatedAt = $updatedAt;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of Updated At
+     *
+     * @return int
+     */
+    public function getUpdatedAt()
+    {
+        return $this->updatedAt;
+    }
+
+    /**
+     * Set the value of State
+     *
+     * @param string $state
+     *
+     * @return self
+     */
+    public function setState(string $state)
     {
         $this->state = $state;
 
@@ -124,7 +154,7 @@ class Alert
     /**
      * Get the value of State
      *
-     * @return int
+     * @return string
      */
     public function getState()
     {
@@ -217,7 +247,7 @@ class Alert
      */
     public function hasExpired()
     {
-        return \time() - $this->createdAt >= $this->expiryDuration;
+        return \time() - $this->updatedAt >= $this->expiryDuration;
     }
 
     /**
@@ -240,12 +270,11 @@ class Alert
                 throw new \RuntimeException("ID and Attributes required.");
             }
             if (!isset($a->state)) {
-                $a->state = Alert::ACTIVE;
+                $a->state = self::ACTIVE;
             }
             if (!isset($a->createdAt)) {
                 $a->createdAt = \time();
             }
-
             $alerts[] = new self($a->id, $a->state, (array)$a->attributes, $a->createdAt,
                 isset($a->expiryDuration) ? $a->expiryDuration : $defaultExpiry);
         }
@@ -300,4 +329,16 @@ class Alert
         return $this->expiryDuration;
     }
 
+    /**
+     * Update this alert with values from another Alert
+     *
+     * @return void
+     */
+    public function updateFromAlert(Alert $alert)
+    {
+        $this->state = $alert->getState();
+        $this->attributes = $alert->getAttributes();
+        $this->expiryDuration = $alert->getExpiryDuration();
+        $this->updatedAt = \time();
+    }
 }

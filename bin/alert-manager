@@ -11,8 +11,9 @@ use SeanKndy\AlertManager\Alerts\Alert;
 
 $loop = \React\EventLoop\Factory::create();
 
-$receiverA = new Email('skennedy@office.vcn.com');
-$receiverB = new Email('sean@kndy.net');
+$smtpConfig = ['server' => 'smtp.vcn.com', 'from' => 'alerts@vcn.com'];
+$receiverA = new Email($loop, 'skennedy@office.vcn.com', $smtpConfig);
+$receiverB = new Email($loop, 'sean@kndy.net', $smtpConfig);
 
 $allReceivers = new Group([
     $receiverA, $receiverB

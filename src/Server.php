@@ -91,6 +91,8 @@ class Server
 
     private function processQueue()
     {
+        $this->queue->settle();
+
         $promises = [];
         echo "queue has " . \count($this->queue) . " entries\n";
         foreach ($this->queue as $alert) {
