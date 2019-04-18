@@ -61,6 +61,17 @@ class Server
             );
         }
 
+        // while we don't have any sort of complex api parsing, versioning and
+        // routing at this time, i am still going to enforce callers use a path
+        // so future non-breakable changes to the API can be made.
+        if ($request->getUri()->getPath() != '/api/v1/alerts') {
+            return new HttpResponse(
+                404,
+                ['Content-Type' => 'application/json'],
+                \json_encode(['status' => 'error'])
+            );
+        }
+
         // must have valid authorization key
         // should fire off code to verify $request->getHeaderLine('Authorization'));
 

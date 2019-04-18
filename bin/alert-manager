@@ -26,7 +26,7 @@ $router = (new Router())
     ->addRoute(Route::toDestination(null)->where('regex:location_name', '/^CLIENTS..+/'));
 
 $server = new Server(
-    '0.0.0.0:8000',
+    '0.0.0.0:8514',
     $loop,
     $router
 );

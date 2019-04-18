@@ -26,4 +26,4 @@ alerts1='[
     }
   }
 ]'
-curl -X POST -H "Content-Type: application/json" -d "$alerts1" http://localhost:8000
+curl -X POST -H "Content-Type: application/json" -d "$alerts1" http://localhost:8514/api/v1/alerts
