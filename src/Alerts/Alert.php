@@ -15,9 +15,10 @@ class Alert
      */
     protected $state;
     /**
+     * Serves as unique identifier for the Alert.
      * @var mixed
      */
-    protected $id;
+    protected $name;
     /**
      * @var array
      */
@@ -40,10 +41,10 @@ class Alert
      */
     private $receiverTransactions;
 
-    public function __construct($id, string $state, array $attributes,
+    public function __construct($name, string $state, array $attributes,
         int $createdAt = 0, int $expiryDuration = 600)
     {
-        $this->id = $id;
+        $this->name = $name;
         $this->state = $state;
         $this->attributes = $attributes;
         $this->createdAt = $createdAt ? $createdAt : \time();
@@ -66,25 +67,25 @@ class Alert
     }
 
     /**
-     * Get the value of Id
+     * Get the value of name
      *
      * @return mixed
      */
-    public function getId()
+    public function getName()
     {
-        return $this->id;
+        return $this->name;
     }
 
     /**
-     * Set the value of Id
+     * Set the value of name
      *
-     * @param mixed id
+     * @param mixed name
      *
      * @return self
      */
-    public function setId($id)
+    public function setName($name)
     {
-        $this->id = $id;
+        $this->name = $name;
 
         return $this;
     }
@@ -266,8 +267,8 @@ class Alert
             $json = [$json];
         }
         foreach ($json as $a) {
-            if (!isset($a->id, $a->attributes)) {
-                throw new \RuntimeException("ID and Attributes required.");
+            if (!isset($a->name, $a->attributes)) {
+                throw new \RuntimeException("Name and Attributes required.");
             }
             if (!isset($a->state)) {
                 $a->state = self::ACTIVE;
@@ -275,7 +276,7 @@ class Alert
             if (!isset($a->createdAt)) {
                 $a->createdAt = \time();
             }
-            $alerts[] = new self($a->id, $a->state, (array)$a->attributes, $a->createdAt,
+            $alerts[] = new self($a->name, $a->state, (array)$a->attributes, $a->createdAt,
                 isset($a->expiryDuration) ? $a->expiryDuration : $defaultExpiry);
         }
         return $alerts;

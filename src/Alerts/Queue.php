@@ -19,7 +19,7 @@ class Queue implements \Iterator, \Countable, \ArrayAccess
      */
     public function enqueue(Alert $alert)
     {
-        $this->pending[$alert->getId()] = $alert;
+        $this->pending[$alert->getName()] = $alert;
 
         return $this;
     }
@@ -32,13 +32,13 @@ class Queue implements \Iterator, \Countable, \ArrayAccess
     public function settle()
     {
         foreach ($this->pending as $pendingAlert) {
-            if (isset($this->settled[$pendingAlert->getId()])) {
+            if (isset($this->settled[$pendingAlert->getName()])) {
                 // alert ID already exists in settled queue, update it
-                $existingAlert = $this->settled[$pendingAlert->getId()];
+                $existingAlert = $this->settled[$pendingAlert->getName()];
                 $existingAlert->updateFromAlert($pendingAlert);
             } else {
                 // add alert to settled queue
-                $this->settled[$pendingAlert->getId()] = $pendingAlert;
+                $this->settled[$pendingAlert->getName()] = $pendingAlert;
             }
         }
 

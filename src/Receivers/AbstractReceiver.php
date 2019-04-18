@@ -73,7 +73,7 @@ abstract class AbstractReceiver implements RoutableInterface
         if ($this->isActivelyScheduled() && \time() >= $minTime) {
             $lastReceivedTime = $alert->getReceiverTransactionTime($this);
             //var_dump(\get_class($this));
-            //echo "id: " . $alert->getId() . "; lastReceivedTime: " . var_dump($lastReceivedTime) . "\n";
+            //echo "name: " . $alert->getName() . "; lastReceivedTime: " . var_dump($lastReceivedTime) . "\n";
             if ($lastReceivedTime && $lastReceivedTime+$this->repeatInterval > \time()) {
                 return false;
             }

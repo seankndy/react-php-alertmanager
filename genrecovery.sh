@@ -1,6 +1,6 @@
 alerts1='[
   {
-    "id": "12313423",
+    "name": "12313423",
     "expiryDuration": "60",
     "state": "RECOVERED",
     "attributes": {
@@ -14,7 +14,7 @@ alerts1='[
     }
   },
   {
-    "id": "1231342323",
+    "name": "1231342323",
     "expiryDuration": "60",
     "state": "RECOVERED",
     "attributes": {
