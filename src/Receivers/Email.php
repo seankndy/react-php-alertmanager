@@ -25,14 +25,6 @@ class Email extends AbstractReceiver
      * @var
      */
     protected $smtpClient;
-    /**
-     * @var string
-     */
-    protected $subjectTemplate;
-    /**
-     * @var string
-     */
-    protected $messageTemplate;
 
     public function __construct(LoopInterface $loop, string $emailAddress, array $config)
     {
@@ -41,7 +33,8 @@ class Email extends AbstractReceiver
         $this->config = \array_merge([
             'server' => 'localhost',
             'port' => 25,
-            'from' => 'no-reply@localhost.localdomain',
+            'active_from' => 'no-reply@localhost.localdomain',
+            'recovery_from' => 'no-reply@localhost.localdomain',
             'username' => '',
             'password' => ''
         ], $config);
@@ -54,9 +47,15 @@ class Email extends AbstractReceiver
     {
         echo "firing email to {$this->emailAddress}\n";
         $env = $this->config;
+        $env['from'] = $alert->isRecovered() ? $this->config['recovery_from'] :
+            $this->config['active_from'];
         $env['to'] = $this->emailAddress;
-        $env['subject'] = $this->interpolate($alert->getAttributes(), $this->subjectTemplate);
-        $env['message'] = $this->interpolate($alert->getAttributes(), $this->messageTemplate);
+        $env['subject'] = $this->interpolate(
+            $alert->getAttributes(), $this->config['subject_template']
+        );
+        $env['message'] = $this->interpolate(
+            $alert->getAttributes(), $this->config['message_template']
+        );
 
         $process = new Process('php '.__DIR__.'/../../bin/send-email.php', null, $env);
         $process->start($this->loop);
@@ -92,5 +91,12 @@ class Email extends AbstractReceiver
             \array_values($vars),
             $str
         );
+    }
+
+    public function setConfigItem($key, $val)
+    {
+        $this->config[$key] = $val;
+
+        return $this;
     }
 }

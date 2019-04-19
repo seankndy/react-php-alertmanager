@@ -29,6 +29,10 @@ abstract class AbstractReceiver implements RoutableInterface
      * @var int
      */
     protected $alertDelay = 10;
+    /**
+     * @var FilterInterface[]
+     */
+    protected $filters = [];
 
     /**
      * Receive an Alert to act on it.
@@ -60,22 +64,36 @@ abstract class AbstractReceiver implements RoutableInterface
      */
     public function isReceivable(Alert $alert)
     {
+        // never receive alerts if off schedule
+        if (!$this->isActivelyScheduled()) {
+            return false;
+        }
+        // do not receive alert if it matches filter
+        foreach ($this->filters as $filter) {
+            if ($filter->isFiltered($alert)) {
+                return false;
+            }
+        }
+
         if ($alert->isRecovered()) {
             // only send recovery if:
             // 1) receiveRecoveries is ON
-            // 2) receiver is on an activated schedule
-            // 3) receiver received the active form of alert already
-            return $this->receiveRecoveries && $this->isActivelyScheduled() &&
+            // 2) receiver received the active form of alert already
+            return $this->receiveRecoveries &&
                 $alert->getReceiverTransactionTime($this);
         }
 
+        // only allow alert if delay time has elapsed since alert creation
         $minTime = $alert->getCreatedAt() + $this->alertDelay;
-        if ($this->isActivelyScheduled() && \time() >= $minTime) {
+        if (\time() >= $minTime) {
             $lastReceivedTime = $alert->getReceiverTransactionTime($this);
-            //var_dump(\get_class($this));
-            //echo "name: " . $alert->getName() . "; lastReceivedTime: " . var_dump($lastReceivedTime) . "\n";
-            if ($lastReceivedTime && $lastReceivedTime+$this->repeatInterval > \time()) {
-                return false;
+            if ($lastReceivedTime) {
+                // do not allow alert that has already been received
+                // and interval has not elapsed
+                if ($this->repeatInterval <= 0 || 
+                    $lastReceivedTime+$this->repeatInterval > \time()) {
+                    return false;
+                }
             }
             return true;
         }
@@ -206,5 +224,19 @@ abstract class AbstractReceiver implements RoutableInterface
     public function getAlertDelay()
     {
         return $this->alertDelay;
+    }
+
+    /**
+     * Add FilterInterface for this receiver
+     *
+     * @param FilterInterface $filter 
+     *
+     * @return self
+     */
+    public function addFilter(FilterInterface $filter)
+    {
+        $this->filters[] = $filter;
+
+        return $this;
     }
 }

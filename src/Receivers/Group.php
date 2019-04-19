@@ -5,16 +5,16 @@ use React\Promise\PromiseInterface;
 use SeanKndy\AlertManager\Alerts\Alert;
 use SeanKndy\AlertManager\Routing\RoutableInterface;
 
-class Group implements RoutableInterface
+class Group implements RoutableInterface, \Countable
 {
     /**
-     * @var AbstractReceiver[]
+     * @var \SplObjectStorage
      */
-    private $receivers = [];
+    private $receivers;
 
     public function __construct(array $receivers = [])
     {
-        $this->receivers = $receivers;
+        $this->setReceivers($receivers);
     }
 
     /**
@@ -36,7 +36,7 @@ class Group implements RoutableInterface
      */
     public function getReceivers()
     {
-        return $this->receivers;
+        return \iterator_to_array($this->receivers);
     }
 
     /**
@@ -48,7 +48,10 @@ class Group implements RoutableInterface
      */
     public function setReceivers(array $receivers)
     {
-        $this->receivers = $receivers;
+        $this->receivers = new \SplObjectStorage();
+        foreach ($receivers as $r) {
+            $this->receivers->attach($r);
+        }
 
         return $this;
     }
@@ -56,14 +59,45 @@ class Group implements RoutableInterface
     /**
      * Add a Receiver to group
      *
-     * @param AbstractReceiver[] receivers
+     * @param AbstractReceiver receiver
      *
      * @return self
      */
     public function addReceiver(AbstractReceiver $receiver)
     {
-        $this->receivers[] = $receivers;
+        $this->receivers->attach($receiver);
 
         return $this;
+    }
+
+    /**
+     * Check if Receiver in group
+     *
+     * @param AbstractReceiver $receiver
+     *
+     * @return bool
+     */
+    public function containsReceiver(AbstractReceiver $receiver)
+    {
+        return $this->receivers->contains($receiver);
+    }
+
+    /**
+     * Remove Receiver from group
+     *
+     * @param AbstractReceiver $receiver
+     *
+     * @return self
+     */
+    public function removeReceiver(AbstractReceiver $receiver)
+    {
+        $this->receivers->detach($receiver);
+
+        return $this;
+    }
+
+    public function count()
+    {
+        return \count($this->receivers);
     }
 }
