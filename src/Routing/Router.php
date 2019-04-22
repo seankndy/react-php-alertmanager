@@ -82,4 +82,16 @@ class Router implements RoutableInterface
 
         return $this;
     }
+
+    /**
+     * After the last-added Route routes, stop (this is the default behavior)
+     *
+     * @return self
+     */
+    public function stop()
+    {
+        $this->routes[$this->lastRoute] = false;
+
+        return $this;
+    }
 }
