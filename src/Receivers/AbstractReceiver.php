@@ -239,4 +239,16 @@ abstract class AbstractReceiver implements RoutableInterface
 
         return $this;
     }
+
+    /**
+     * Clear filters
+     *
+     * @return self
+     */
+    public function clearFilters()
+    {
+        $this->filters = [];
+
+        return $this;
+    }
 }
