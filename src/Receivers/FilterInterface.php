@@ -12,5 +12,5 @@ interface FilterInterface
      *
      * @return bool
      */
-    public class isFiltered(Alert $alert) : bool;
+    public function isFiltered(Alert $alert) : bool;
 }
