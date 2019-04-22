@@ -4,7 +4,19 @@ namespace SeanKndy\AlertManager\Routing;
 use React\EventLoop\LoopInterface;
 use React\Promise\PromiseInterface;
 use SeanKndy\AlertManager\Alerts\Alert;
-
+/**
+ * Router is simply a collection of RoutableInterfaces that by default will
+ * attempt to route to each one and upon successfully routing, stop any further
+ * routing to routes added after it.
+ *
+ * This behavior can be changed with continue() and stop().  If addRoute() is
+ * followed up with continue(), then the router will continue trying the next
+ * route even after the alert was successfully routed.
+ *
+ * You can use stop() after a series of continue()s in order to stop the
+ * continuable route-chain, but only if the Alert was indeed routed to at least
+ * one of the continued routes.
+ */
 class Router implements RoutableInterface
 {
     /**
