@@ -21,10 +21,6 @@ class Email extends AbstractReceiver
      * @var array
      */
     protected $config;
-    /**
-     * @var
-     */
-    protected $smtpClient;
 
     public function __construct(LoopInterface $loop, string $emailAddress, array $config)
     {
@@ -45,6 +41,10 @@ class Email extends AbstractReceiver
      */
     public function receive(Alert $alert) : PromiseInterface
     {
+        if (!$this->emailAddress) {
+            return \React\Promise\resolve([]);
+        }
+
         echo "firing email to {$this->emailAddress}\n";
         $env = $this->config;
         $env['from'] = $alert->isRecovered() ? $this->config['recovery_from'] :

@@ -79,7 +79,6 @@ class Server
         try {
             $alerts = Alert::fromJSON((string)$request->getBody(), $this->defaultExpiryDuration);
         } catch (\Throwable $e) {
-            var_dump($e->getMessage() . " " . $e->getFile() . " " . $e->getLine());
             return new HttpResponse(
                 400,
                 ['Content-Type' => 'application/json'],
