@@ -99,4 +99,14 @@ class Email extends AbstractReceiver
 
         return $this;
     }
+
+    public function getEmailAddress()
+    {
+        return $this->emailAddress;
+    }
+
+    public function getConfig()
+    {
+        return $this->config;
+    }
 }
