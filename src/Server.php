@@ -80,7 +80,6 @@ class Server extends EventEmitter
         // build Alerts from request body
         try {
             $alerts = Alert::fromJSON((string)$request->getBody(), $this->defaultExpiryDuration);
-            $this->emit('alert', [$alert]);
         } catch (\Throwable $e) {
             return new HttpResponse(
                 400,
@@ -91,6 +90,7 @@ class Server extends EventEmitter
 
         // queue alerts
         foreach ($alerts as $alert) {
+            $this->emit('alert', [$alert]);
             $this->queue->enqueue($alert);
         }
 
