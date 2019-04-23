@@ -342,4 +342,20 @@ class Alert
         $this->expiryDuration = $alert->getExpiryDuration();
         $this->updatedAt = \time();
     }
+
+    /**
+     * String representation
+     *
+     * @return string
+     */
+    public function __toString()
+    {
+        return 'name='.$this->name.'; ' .
+            'state='.$this->state.'; ' .
+            'num-attributes='.\count($this->attributes).'; ' .
+            'created-at=' . date(DATE_ATOM, $this->createdAt) . '; ' .
+            'updated-at=' . date(DATE_ATOM, $this->updatedAt) . '; ' .
+            'expiry-duration=' . $this->expiryDuration . 'sec; ' .
+            'num-receiver-transactions=' . \count($this->receiverTransactions);
+    }
 }
