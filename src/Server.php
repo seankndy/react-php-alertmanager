@@ -9,8 +9,9 @@ use React\EventLoop\LoopInterface;
 use React\Http\Response as HttpResponse;
 use React\Http\Server as HttpServer;
 use React\Socket\Server as SocketServer;
+use Evenement\EventEmitter;
 
-class Server
+class Server extends EventEmitter
 {
     /**
      * @var LoopInterface
@@ -33,7 +34,8 @@ class Server
      */
     private $defaultExpiryDuration = 600; // 10min
 
-    public function __construct(string $listen, LoopInterface $loop, RoutableInterface $router)
+    public function __construct(string $listen, LoopInterface $loop,
+        RoutableInterface $router)
     {
         $this->loop = $loop;
         $this->router = $router;
@@ -78,6 +80,7 @@ class Server
         // build Alerts from request body
         try {
             $alerts = Alert::fromJSON((string)$request->getBody(), $this->defaultExpiryDuration);
+            $this->emit('alert', [$alert]);
         } catch (\Throwable $e) {
             return new HttpResponse(
                 400,
@@ -112,6 +115,7 @@ class Server
             }
             if (!$alert->isDeleted()) {
                 if ($promise = $this->router->route($alert)) {
+                    $this->emit('routed', [$alert]);
                     $promises[] = $promise;
                 }
             }
