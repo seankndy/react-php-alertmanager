@@ -112,7 +112,9 @@ class Server
                 $alert->setState(Alert::RECOVERED);
             }
             if (!$alert->isDeleted()) {
-                $promises[] = $this->router->route($alert);
+                if ($promise = $this->router->route($alert)) {
+                    $promises[] = $promise;
+                }
             }
         }
 
