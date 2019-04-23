@@ -48,7 +48,7 @@ class Alert
         $this->state = $state;
         $this->attributes = $attributes;
         $this->createdAt = $createdAt ? $createdAt : \time();
-        $this->updatedAt = $this->createdAt;
+        $this->updatedAt = \time();
         $this->expiryDuration = $expiryDuration;
         $this->receiverTransactions = new \SplObjectStorage();
     }
