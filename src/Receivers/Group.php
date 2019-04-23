@@ -108,8 +108,12 @@ class Group implements RoutableInterface, \Countable
      */
     public function __toString()
     {
-        $str = \implode(PHP_EOL, \iterator_to_array($this->receivers));
-        
-        return $str;
+        $i = 1;
+        $sep = ' -- ';
+        $str = '';
+        foreach ($this->receivers as $receiver) {
+            $str .= "Receiver #" . ($i++) . ": " . (string)$receiver . $sep;
+        }
+        return rtrim($str, $sep);
     }
 }
