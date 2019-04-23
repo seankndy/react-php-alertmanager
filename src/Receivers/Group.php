@@ -108,7 +108,8 @@ class Group implements RoutableInterface, \Countable
      */
     public function __toString()
     {
-        return parent::__toString() . '; ' .
-            'num-receivers=' . \count($this->receivers);
+        $str = \implode(PHP_EOL, \iterator_to_array($this->receivers));
+        
+        return $str;
     }
 }
