@@ -43,7 +43,7 @@ class Router implements RoutableInterface
     public function route(Alert $alert) : ?PromiseInterface
     {
         $promises = [];
-        foreach ($this->routes as $route => $action) {
+        foreach ($this->routes as $action => $route) {
             if ($promise = $route->route($alert)) {
                 $promises[] = $promise;
 
@@ -89,6 +89,30 @@ class Router implements RoutableInterface
         }
 
         return $this;
+    }
+        
+    /**
+     * Set all routes
+     *
+     * @param \SplObjectStorage $routes
+     *
+     * @return self
+     */
+    public function setRoutes(\SplObjectStorage $routes)
+    {
+        $this->routes = $routes;
+
+        return $this;
+    }
+
+    /**
+     * Get all routes
+     *
+     * @return \SplObjectStorage|RoutableInterface[]
+     */
+    public function getRoutes($asArray = false)
+    {
+        return $asArray ? \iterator_to_array($this->routes) : $this->routes;
     }
 
     /**

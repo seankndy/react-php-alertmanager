@@ -6,7 +6,16 @@
  *
  */
 
-require __DIR__.'../../vendor/autoload.php';
+$autoload = [
+    __DIR__.'/../../../../vendor/autoload.php',
+    __DIR__.'../../vendor/autoload.php',
+];
+foreach ($autoload as $file) {
+    if (\file_exists($file)) {
+        require_once($file);
+        break;
+    }
+}
 
 if (!isset($_SERVER['server'], $_SERVER['port'], $_SERVER['from'],
     $_SERVER['to'], $_SERVER['message'])) {
