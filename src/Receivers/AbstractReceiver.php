@@ -44,13 +44,13 @@ abstract class AbstractReceiver implements RoutableInterface
     abstract public function receive(Alert $alert) : PromiseInterface;
 
     /**
-     * Implement RoutableInterface by dispatching the alert to this Receiver.
-     *
+     * {@inheritDoc} Implement RoutableInterface by dispatching the Alert
+     * to this Receiver.
      */
     public function route(Alert $alert) : ?PromiseInterface
     {
         if (!$this->isReceivable($alert)) {
-            return \React\Promise\resolve([]);
+            return null;
         }
         return $alert->dispatch($this);
     }
@@ -90,7 +90,7 @@ abstract class AbstractReceiver implements RoutableInterface
             if ($lastReceivedTime) {
                 // do not allow alert that has already been received
                 // and interval has not elapsed
-                if ($this->repeatInterval <= 0 || 
+                if ($this->repeatInterval <= 0 ||
                     $lastReceivedTime+$this->repeatInterval > \time()) {
                     return false;
                 }
@@ -229,7 +229,7 @@ abstract class AbstractReceiver implements RoutableInterface
     /**
      * Add FilterInterface for this receiver
      *
-     * @param FilterInterface $filter 
+     * @param FilterInterface $filter
      *
      * @return self
      */

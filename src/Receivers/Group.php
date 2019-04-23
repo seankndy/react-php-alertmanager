@@ -24,9 +24,11 @@ class Group implements RoutableInterface, \Countable
     {
         $promises = [];
         foreach ($this->receivers as $receiver) {
-            $promises[] = $receiver->route($alert);
+            if ($promise = $receiver->route($alert)) {
+                $promises[] = $promise;
+            }
         }
-        return \React\Promise\all($promises);
+        return $promises ? \React\Promise\all($promises) : null;
     }
 
     /**
