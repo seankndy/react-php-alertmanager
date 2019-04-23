@@ -54,7 +54,10 @@ class Router implements RoutableInterface
                 break;
             }
         }
-        return \React\Promise\all($promises);
+        if ($promises) {
+            return \React\Promise\all($promises);
+        }
+        return null;
     }
 
     /**
