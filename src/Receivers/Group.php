@@ -102,4 +102,13 @@ class Group implements RoutableInterface, \Countable
     {
         return \count($this->receivers);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function __toString()
+    {
+        return parent::__toString() . '; ' .
+            'num-receivers=' . \count($this->receivers);
+    }
 }

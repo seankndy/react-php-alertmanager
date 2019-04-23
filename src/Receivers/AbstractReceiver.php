@@ -251,4 +251,17 @@ abstract class AbstractReceiver implements RoutableInterface
 
         return $this;
     }
+
+    /**
+     * String representation
+     *
+     * @return string
+     */
+    public function __toString()
+    {
+        return 'num-schedules=' . \count($this->schedules) . '; ' .
+            'repeat-interval=' . $this->repeatInterval . 'sec; ' .
+            'alert-delay=' . $this->alertDelay . 'sec; ' .
+            'num-filters=' . \count($this->filters);
+    }
 }

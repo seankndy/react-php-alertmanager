@@ -109,4 +109,13 @@ class Email extends AbstractReceiver
     {
         return $this->config;
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function __toString()
+    {
+        return parent::__toString() . '; ' .
+            'email=' . $this->emailAddress;
+    }
 }
