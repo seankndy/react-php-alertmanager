@@ -2,6 +2,7 @@
 namespace SeanKndy\AlertManager\Receivers;
 
 use SeanKndy\AlertManager\Alerts\Alert;
+use SeanKndy\AlertManager\Alerts\ThrottledReceiverAlert;
 use React\Promise\PromiseInterface;
 
 class Throttler extends ReceiverDecorator
@@ -41,6 +42,12 @@ class Throttler extends ReceiverDecorator
      * @var int
      */
     protected $holdDownStartTime = 0;
+    /**
+     * A receiver to send a special notification (Alert) to notify that the
+     * original receiver has been throttled.
+     * @var AbstractReceiver
+     */
+    protected $onHoldDownReceiver = null;
 
     /**
      * {@inheritDoc}
@@ -71,6 +78,11 @@ class Throttler extends ReceiverDecorator
         // has hit count exceeed threshold?
         if ($this->hitCount >= $this->hitThreshold) {
             $this->holdDownStartTime = \time();
+            if ($this->onHoldDownReceiver) {
+                $this->onHoldDownReceiver->receive(new ThrottledReceiverAlert(
+                    $this->holdDownStartTime+$this->holdDown
+                ));
+            }
             return \React\Promise\resolve([]);
         }
 
@@ -149,4 +161,27 @@ class Throttler extends ReceiverDecorator
         return $this;
     }
 
+    /**
+     * Get value of onHoldDownReceiver
+     *
+     * @return AbstractReceiver|null
+     */
+    public function getOnHoldDownReceiver(AbstractReceiver $receiver)
+    {
+        return $this->onHoldDownReceiver;
+    }
+
+    /**
+     * Set value of onHoldDownReceiver
+     *
+     * @param AbstractReceiver $receiver
+     *
+     * @return self
+     */
+    public function setOnHoldDownReceiver(AbstractReceiver $receiver)
+    {
+        $this->onHoldDownReceiver = $receiver;
+
+        return $this;
+    }
 }

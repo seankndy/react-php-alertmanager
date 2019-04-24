@@ -2,6 +2,7 @@
 namespace SeanKndy\AlertManager\Receivers;
 
 use SeanKndy\AlertManager\Alerts\Alert;
+use SeanKndy\AlertManager\Alerts\ThrottledReceiverAlert;
 use React\EventLoop\LoopInterface;
 use React\Promise\PromiseInterface;
 use React\ChildProcess\Process;
@@ -45,17 +46,25 @@ class Email extends AbstractReceiver
             return \React\Promise\resolve([]);
         }
 
-        echo "firing email to {$this->emailAddress}\n";
-        $env = $this->config;
-        $env['from'] = $alert->isRecovered() ? $this->config['recovery_from'] :
-            $this->config['active_from'];
-        $env['to'] = $this->emailAddress;
-        $env['subject'] = $this->interpolate(
-            $alert->getAttributes(), $this->config['subject_template']
-        );
-        $env['message'] = $this->interpolate(
-            $alert->getAttributes(), $this->config['message_template']
-        );
+        if ($alert instanceof ThrottledReceiverAlert) {
+            $env = $this->config;
+            $env['from'] = $this->config['active_from'];
+            $env['to'] = $this->emailAddress;
+            $env['subject'] = '';
+            $env['message'] = 'Alerts to this receiver has been throttled until ' .
+                \date(DATE_ATOM, $alert->getAttributes()['expiresAt']) . '.';
+        } else {
+            $env = $this->config;
+            $env['from'] = $alert->isRecovered() ? $this->config['recovery_from'] :
+                $this->config['active_from'];
+            $env['to'] = $this->emailAddress;
+            $env['subject'] = $this->interpolate(
+                $alert->getAttributes(), $this->config['subject_template']
+            );
+            $env['message'] = $this->interpolate(
+                $alert->getAttributes(), $this->config['message_template']
+            );
+        }
 
         $process = new Process('php '.__DIR__.'/../../bin/send-email.php', null, $env);
         $process->start($this->loop);
