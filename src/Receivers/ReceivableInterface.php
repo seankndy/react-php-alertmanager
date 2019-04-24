@@ -1,6 +1,7 @@
 <?php
 namespace SeanKndy\AlertManager\Receivers;
 
+use SeanKndy\AlertManager\Alerts\Alert;
 use React\Promise\PromiseInterface;
 
 interface ReceivableInterface
