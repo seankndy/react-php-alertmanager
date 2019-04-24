@@ -2,6 +2,7 @@
 namespace SeanKndy\AlertManager\Receivers;
 
 use React\Promise\PromiseInterface;
+use SeanKndy\AlertManager\Routing\RoutableInterface;
 
 abstract class ReceiverDecorator implements ReceivableInterface
 {
@@ -13,6 +14,14 @@ abstract class ReceiverDecorator implements ReceivableInterface
     public function __construct(AbstractReceiver $receiver)
     {
         $this->receiver = $receiver;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function route(Alert $alert) : ?PromiseInterface
+    {
+        return $this->receiver->route($alert);
     }
 
     /**
@@ -39,4 +48,11 @@ abstract class ReceiverDecorator implements ReceivableInterface
         return $this;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    public function __toString()
+    {
+        return (string)$this->receiver;
+    }
 }

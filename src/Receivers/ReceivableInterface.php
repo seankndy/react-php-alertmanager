@@ -2,9 +2,10 @@
 namespace SeanKndy\AlertManager\Receivers;
 
 use SeanKndy\AlertManager\Alerts\Alert;
+use SeanKndy\AlertManager\Routing\RoutableInterface;
 use React\Promise\PromiseInterface;
 
-interface ReceivableInterface
+interface ReceivableInterface extends RoutableInterface
 {
     /**
      * Receive an Alert to act on it.

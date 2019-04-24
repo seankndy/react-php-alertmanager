@@ -3,10 +3,9 @@ namespace SeanKndy\AlertManager\Receivers;
 
 use React\Promise\PromiseInterface;
 use SeanKndy\AlertManager\Alerts\Alert;
-use SeanKndy\AlertManager\Routing\RoutableInterface;
 use SeanKndy\AlertManager\Scheduling\ScheduleInterface;
 
-abstract class AbstractReceiver implements RoutableInterface, ReceivableInterface
+abstract class AbstractReceiver implements ReceivableInterface
 {
     /**
      * Schedules determing when the receiver is active
@@ -35,8 +34,7 @@ abstract class AbstractReceiver implements RoutableInterface, ReceivableInterfac
     protected $filters = [];
 
     /**
-     * {@inheritDoc} Implement RoutableInterface by dispatching the Alert
-     * to this Receiver.
+     * {@inheritDoc}
      */
     public function route(Alert $alert) : ?PromiseInterface
     {

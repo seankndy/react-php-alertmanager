@@ -18,7 +18,7 @@ use Evenement\EventEmitter;
  * continuable route-chain, but only if the Alert was indeed routed to at least
  * one of the continued routes.
  */
-class Router extends EventEmitter implements RoutableInterface
+class Router extends EventEmitter implements RoutableInterface, \Countable
 {
     /**
      * @var \SplObjectStorage
@@ -73,6 +73,18 @@ class Router extends EventEmitter implements RoutableInterface
         $this->lastRoute = $route;
 
         return $this;
+    }
+
+    /**
+     * Does Router contain RoutableInterface $route?
+     *
+     * @param RoutableInterface $route
+     *
+     * @return bool
+     */
+    public function hasRoute(RoutableInterface $route)
+    {
+        return $this->routes->contains($route);
     }
 
     /**
@@ -153,5 +165,15 @@ class Router extends EventEmitter implements RoutableInterface
         $this->routes[$this->lastRoute] = self::STOP;
 
         return $this;
+    }
+
+    /**
+     * \Countable Implementation
+     *
+     * @return int
+     */
+    public function count()
+    {
+        return \count($this->routes);
     }
 }
