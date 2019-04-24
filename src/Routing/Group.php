@@ -18,7 +18,7 @@ class Group extends Router
     public function __construct(array $routables = [])
     {
         parent::__construct();
-        
+
         foreach ($routables as $routable) {
             $this->addRoute($routable);
         }

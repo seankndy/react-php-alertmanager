@@ -176,4 +176,15 @@ class Router extends EventEmitter implements RoutableInterface, \Countable
     {
         return \count($this->routes);
     }
+
+    public function __toString()
+    {
+        $i = 1;
+        $sep = ' -- ';
+        $str = '';
+        foreach ($this->routes as $route) {
+            $str .= "Routable #" . ($i++) . ": " . (string)$route . $sep;
+        }
+        return rtrim($str, $sep);
+    }
 }
