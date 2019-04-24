@@ -11,6 +11,7 @@ class Alert
     const DELETED = 'DELETED';
 
     /**
+     * State: either ACTIVE, RECOVERED or DELETED
      * @var int
      */
     protected $state;
@@ -20,14 +21,17 @@ class Alert
      */
     protected $name;
     /**
+     * All alert details are arbitrarily stored here.
      * @var array
      */
     protected $attributes = [];
     /**
+     * Time of creation.
      * @var int
      */
     protected $createdAt;
     /**
+     * Time last updated.
      * @var int
      */
     protected $updatedAt;
@@ -37,6 +41,7 @@ class Alert
      */
     protected $expiryDuration;
     /**
+     * Keep history of which Receiver's this Alert has dispatched to.
      * @var \SplObjectStorage
      */
     private $receiverTransactions;

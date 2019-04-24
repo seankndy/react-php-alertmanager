@@ -6,7 +6,7 @@ use SeanKndy\AlertManager\Alerts\Alert;
 use SeanKndy\AlertManager\Routing\RoutableInterface;
 use SeanKndy\AlertManager\Scheduling\ScheduleInterface;
 
-abstract class AbstractReceiver implements RoutableInterface
+abstract class AbstractReceiver implements RoutableInterface, ReceivableInterface
 {
     /**
      * Schedules determing when the receiver is active
@@ -33,15 +33,6 @@ abstract class AbstractReceiver implements RoutableInterface
      * @var FilterInterface[]
      */
     protected $filters = [];
-
-    /**
-     * Receive an Alert to act on it.
-     *
-     * @param Alert $alert
-     *
-     * @return void
-     */
-    abstract public function receive(Alert $alert) : PromiseInterface;
 
     /**
      * {@inheritDoc} Implement RoutableInterface by dispatching the Alert
