@@ -3,7 +3,7 @@ namespace SeanKndy\AlertManager\Receivers;
 
 use React\Promise\PromiseInterface;
 
-class ReceiverDecorator implements ReceivableInterface
+abstract class ReceiverDecorator implements ReceivableInterface
 {
     /**
      * @var AbstractReceiver
@@ -16,7 +16,7 @@ class ReceiverDecorator implements ReceivableInterface
     }
 
     /**
-     * Get the value of Receiver 
+     * Get the value of Receiver
      *
      * @return AbstractReceiver
      */
