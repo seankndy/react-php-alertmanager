@@ -2,7 +2,7 @@
 namespace SeanKndy\AlertManager\Alerts;
 
 use React\Promise\PromiseInterface;
-use SeanKndy\AlertManager\Receivers\AbstractReceiver;
+use SeanKndy\AlertManager\Receivers\ReceivableInterface;
 
 class Alert
 {
@@ -61,11 +61,11 @@ class Alert
     /**
      * Dispatch this alert to a Receiver
      *
-     * @param AbstractReceiver $receiver
+     * @param ReceivableInterface $receiver
      *
      * @return PromiseInterface
      */
-    public function dispatch(AbstractReceiver $receiver)
+    public function dispatch(ReceivableInterface $receiver)
     {
         $this->receiverTransaction($receiver);
         return $receiver->receive($this);
@@ -196,7 +196,7 @@ class Alert
      *
      * @return self
      */
-    public function receiverTransaction(AbstractReceiver $receiver)
+    public function receiverTransaction(ReceivableInterface $receiver)
     {
         $this->receiverTransactions[$receiver] = \time();
 
@@ -208,7 +208,7 @@ class Alert
      *
      * @return int|null
      */
-    public function getReceiverTransactionTime(AbstractReceiver $receiver)
+    public function getReceiverTransactionTime(ReceivableInterface $receiver)
     {
         if (isset($this->receiverTransactions[$receiver])) {
             return $this->receiverTransactions[$receiver];
