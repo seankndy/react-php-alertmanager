@@ -59,16 +59,6 @@ class Route implements RoutableInterface
     }
 
     /**
-     * Get value of criteria
-     *
-     * @return Criteria|null
-     */
-    public function getCriteria()
-    {
-        return $this->criteria;
-    }
-
-    /**
      * Route Alert to destination (if matching)
      */
     public function route(Alert $alert) : ?PromiseInterface
@@ -84,5 +74,53 @@ class Route implements RoutableInterface
             return \React\Promise\resolve([]);
         }
         return $this->destination->route($alert);
+    }
+
+    /**
+     * Get the value of Destination
+     *
+     * @return RoutableInterface|null
+     */
+    public function getDestination()
+    {
+        return $this->destination;
+    }
+
+    /**
+     * Set the value of Destination
+     *
+     * @param RoutableInterface destination
+     *
+     * @return self
+     */
+    public function setDestination(RoutableInterface $destination = null)
+    {
+        $this->destination = $destination;
+
+        return $this;
+    }
+
+    /**
+     * Get value of criteria
+     *
+     * @return Criteria|null
+     */
+    public function getCriteria()
+    {
+        return $this->criteria;
+    }
+
+    /**
+     * Set the value of Criteria
+     *
+     * @param Criteria criteria
+     *
+     * @return self
+     */
+    public function setCriteria(Criteria $criteria)
+    {
+        $this->criteria = $criteria;
+
+        return $this;
     }
 }
