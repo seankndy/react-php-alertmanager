@@ -44,7 +44,7 @@ class Alert
      * Keep history of which Receiver's this Alert has dispatched to.
      * @var \SplObjectStorage
      */
-    private $receiverTransactions;
+    private $dispatchedReceivers;
 
     public function __construct($name, string $state, array $attributes,
         int $createdAt = 0, int $expiryDuration = 600)
@@ -55,7 +55,7 @@ class Alert
         $this->createdAt = $createdAt ? $createdAt : \time();
         $this->updatedAt = \time();
         $this->expiryDuration = $expiryDuration;
-        $this->receiverTransactions = new \SplObjectStorage();
+        $this->dispatchedReceivers = new \SplObjectStorage();
     }
 
     /**
@@ -67,7 +67,7 @@ class Alert
      */
     public function dispatch(ReceivableInterface $receiver)
     {
-        $this->receiverTransaction($receiver);
+        $this->addDispatchedReceiver($receiver);
         return $receiver->receive($this);
     }
 
@@ -171,50 +171,50 @@ class Alert
     }
 
     /**
-     * Get the value of Receiver Transactions
+     * Get the value of dispatchedReceivers
      *
      * @return \SplObjectStorage
      */
-    public function getReceiverTransactions()
+    public function getDispatchedReceivers()
     {
-        return $this->receiverTransactions;
+        return $this->dispatchedReceivers;
     }
 
     /**
-     * Set the value of Receiver Transactions
+     * Set the value of dispatchedReceivers
      *
-     * @param \SplObjectStorage receiverTransactions
+     * @param \SplObjectStorage $receivers
      *
      * @return self
      */
-    public function setReceiverTransactions(\SplObjectStorage $receiverTransactions)
+    public function setDispatchedReceivers(\SplObjectStorage $receivers)
     {
-        $this->receiverTransactions = $receiverTransactions;
+        $this->dispatchedReceivers = $receivers;
 
         return $this;
     }
 
     /**
-     * Add/set Receiver transaction
+     * Add a dispatched receiver
      *
      * @return self
      */
-    public function receiverTransaction(ReceivableInterface $receiver)
+    public function addDispatchedReceiver(ReceivableInterface $receiver)
     {
-        $this->receiverTransactions[$receiver] = \time();
+        $this->dispatchedReceivers[$receiver] = \time();
 
         return $this;
     }
 
     /**
-     * Get the transaction timestamp for Receiver $receiver
+     * Get the dispatched timestamp for Receiver $receiver
      *
      * @return int|null
      */
-    public function getReceiverTransactionTime(ReceivableInterface $receiver)
+    public function getDispatchedReceiverTime(ReceivableInterface $receiver)
     {
-        if (isset($this->receiverTransactions[$receiver])) {
-            return $this->receiverTransactions[$receiver];
+        if (isset($this->dispatchedReceivers[$receiver])) {
+            return $this->dispatchedReceivers[$receiver];
         }
         return null;
     }
@@ -364,6 +364,6 @@ class Alert
             'created-at=' . date(DATE_ATOM, $this->createdAt) . '; ' .
             'updated-at=' . date(DATE_ATOM, $this->updatedAt) . '; ' .
             'expiry-duration=' . $this->expiryDuration . 'sec; ' .
-            'num-receiver-transactions=' . \count($this->receiverTransactions);
+            'num-disaptched-receivers=' . \count($this->dispatchedReceivers);
     }
 }
