@@ -4,8 +4,9 @@ AlertManager is a single-threaded aysnc IO alert manager written in PHP (using r
 
 It receives externally-generated alerts/incidents from a collector via a simple HTTP API (JSON) and routes them to receivers.
 Receivers are PHP objects that extend `\SeanKndy\AlertManager\Receivers\AbstractReceiver` or most basic form of a Receiver would implement
-the `\SeanKndy\AlertManager\Receivers\ReceivableInterface` interface.  Included with AlertManager is an Email receiver, but it's very simple
-to write your own receivers for PagerDuty, a database, etc...
+the `\SeanKndy\AlertManager\Receivers\ReceivableInterface` interface.  `AbstractReceiver` provides some commonly desired functionality like
+scheduling, filtering, initial delay and whether or not to receive recovered alerts. Included with AlertManager is an Email receiver, but
+it's very simple to write your own receivers such as to PagerDuty, a database, Slack, etc...
 
 ## HTTP JSON API - Alert Format
 
