@@ -25,7 +25,7 @@ abstract class ReceiverDecorator implements ReceivableInterface
         if (!$this->receiver->isReceivable($alert)) {
             return null;
         }
-        return $alert->dispatch($this);
+        return $this->receive($alert);
     }
 
     /**

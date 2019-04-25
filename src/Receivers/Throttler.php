@@ -86,7 +86,7 @@ class Throttler extends ReceiverDecorator
             return \React\Promise\resolve([]);
         }
 
-        return $this->receiver->receive($alert);
+        return $this->receiver->route($alert);
     }
 
     /**
