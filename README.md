@@ -185,3 +185,5 @@ Any receivers that extend AbstractReceiver can have a time-based schedule to rec
 ## Receiver Filtering
 
 Similar to scheduling, receivers can filter alerts as well.  AbstractReceiver provides an addFilter() method where you can specify a `\SeanKndy\AlertManager\Receivers\FilterInterface` implementation object.
+
+Note that both Scheduling and Filtering expect simple boolean return values, so they cannot do any IO or long-running operations as that will block the process.  The Receivers use a promise-based interface so that they may perform longer IO ops sending mail, connecting to pager services, etc...
