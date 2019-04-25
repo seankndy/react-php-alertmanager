@@ -7,6 +7,35 @@ Receivers are PHP objects that extend `\SeanKndy\AlertManager\Receivers\Abstract
 the `\SeanKndy\AlertManager\Receivers\ReceivableInterface` interface.  Included with AlertManager is an Email receiver, but it's very simple
 to write your own receivers for PagerDuty, a database, etc...
 
+## HTTP JSON API - Alert Format
+
+```json
+{
+    "name":"unique.alert.name",
+    "expiryDuration":600,
+    "createdAt":1556153572,
+    "state": "ACTIVE",
+    "attributes":{
+        "attr1":"value",
+        "attr2":"value"
+    }
+}
+```
+
+'name' should be a unique name for the alert, but should stay consistent between submissions if it's the same incident.
+
+'expiryDuration' is how long before the alert is auto-expired if its not updated.
+
+'state' is optional and defaults to `ACTIVE`.  It can be `ACTIVE` or `RECOVERED`.
+
+'createdAt' is optional and is when the alert originally fired.  If this is blank, the current time is used.
+
+'attributes' is any number of key/value pairs and is specific to your environment. Routes use information within attributes to make decisions (see below).
+
+AlertManager expects your collector to continually send the incident/alert into it as long as that incident is still active.
+When the incident clears/service is green, then you can either stop submitting the alert and in expiryDuration seconds it will
+auto-resolve, or you can submit the alert with status set to `RECOVERED` to expire/recover the alert immediately.
+
 ## Basic Usage
 
 ```php
