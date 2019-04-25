@@ -136,3 +136,11 @@ $router->addRoute(
     Route::toDestination($throttledSean)
 );
 ```
+
+## Receiver Scheduling
+
+Any receivers that extend AbstractReceiver can have a time-based schedule to receive alerts.  You can use addSchedule() or setSchedules() to provide any number of `\SeanKndy\AlertManager\Scheduling\ScheduleInterface` implementations. `\SeanKndy\AlertManager\Scheduling\BasicScheduler` is a simple implementation provided with the package that you can use, or you can easily write your own scheduling logic by implementing the ScheduleInterface.  It's just one method: `isActive($atTime) : bool`.
+
+## Receiver Filtering
+
+Similar to scheduling, receivers can filter alerts as well.  AbstractReceiver provides an addFilter() method where you can specify a `\SeanKndy\AlertManager\Receivers\FilterInterface` implementation object.
