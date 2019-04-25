@@ -1,6 +1,9 @@
 <?php
 namespace SeanKndy\AlertManager\Auth;
 
+use Psr\Http\Message\ServerRequestInterface;
+use React\Promise\PromiseInterface;
+
 class BasicAuthorizer implements AuthorizerInterface
 {
     /**
