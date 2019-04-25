@@ -143,6 +143,7 @@ class Server extends EventEmitter
             }
             if (!$alert->isDeleted()) {
                 if ($promise = $this->router->route($alert)) {
+                    $this->emit('alert.routed', [$alert, $route]);
                     $promises[] = $promise;
                 }
             }
