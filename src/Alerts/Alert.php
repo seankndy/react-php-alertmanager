@@ -214,7 +214,7 @@ class Alert
     public function getDispatchedReceiverTime(ReceivableInterface $receiver)
     {
         if ($this->dispatchedReceivers->contains($receiver)) {
-            return $this->dispatchedReceivers->getInfo($receiver);
+            return $this->dispatchedReceivers[$receiver];
         }
         return null;
     }
