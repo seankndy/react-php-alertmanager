@@ -121,9 +121,8 @@ Included is a Throttler decorator class which will throttle alerts to any receiv
 
 ```php
 use SeanKndy\AlertManager\Routing\Route;
-use SeanKndy\AlertManager\Routing\Router;
-use SeanKndy\AlertManager\Routing\Group;
 use SeanKndy\AlertManager\Receivers\Email;
+use SeanKndy\AlertManager\Receivers\Throttler;
 
 $sean = new Email($loop, 'sean@somecompany.com', $smtpConfig);
 $throttledSean = new Throttler($sean);
