@@ -50,7 +50,7 @@ class Alert
         int $createdAt = 0, int $expiryDuration = 600)
     {
         $this->name = $name;
-        $this->state = $state;
+        $this->setState($state);
         $this->attributes = $attributes;
         $this->createdAt = $createdAt ? $createdAt : \time();
         $this->updatedAt = \time();
@@ -152,6 +152,9 @@ class Alert
      */
     public function setState(string $state)
     {
+        if (!\in_array($this->state, [self::ACTIVE, self::RECOVERED, self::DELETED])) {
+            throw new \InvalidArgumentException("Invalid state given: $state");
+        }
         $this->state = $state;
 
         return $this;
@@ -342,7 +345,7 @@ class Alert
      */
     public function updateFromAlert(Alert $alert)
     {
-        $this->state = $alert->getState();
+        $this->setState($alert->getState());
         $this->attributes = $alert->getAttributes();
         $this->expiryDuration = $alert->getExpiryDuration();
         $this->updatedAt = \time();
