@@ -57,6 +57,6 @@ abstract class ReceiverDecorator implements ReceivableInterface
      */
     public function __toString()
     {
-        return (string)$this->receiver;
+        return \get_class($this) . '(' . (string)$this->receiver . ')';
     }
 }
