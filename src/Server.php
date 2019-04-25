@@ -80,8 +80,8 @@ class Server extends EventEmitter
             );
         }
 
-        if ($authorizer) {
-            $authPromise = $authorizer->authorize($request);
+        if ($this->authorizer) {
+            $authPromise = $this->authorizer->authorize($request);
         } else {
             $authPromise = \React\Promise\resolve(true);
         }
