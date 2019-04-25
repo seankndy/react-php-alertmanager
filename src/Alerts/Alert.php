@@ -201,7 +201,7 @@ class Alert
      */
     public function addDispatchedReceiver(ReceivableInterface $receiver)
     {
-        $this->dispatchedReceivers[$receiver] = \time();
+        $this->dispatchedReceivers->attach($receiver, \time());
 
         return $this;
     }
@@ -213,8 +213,8 @@ class Alert
      */
     public function getDispatchedReceiverTime(ReceivableInterface $receiver)
     {
-        if (isset($this->dispatchedReceivers[$receiver])) {
-            return $this->dispatchedReceivers[$receiver];
+        if ($this->dispatchedReceivers->contains($receiver)) {
+            return $this->dispatchedReceivers->getInfo($receiver);
         }
         return null;
     }
