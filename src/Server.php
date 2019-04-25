@@ -4,6 +4,7 @@ namespace SeanKndy\AlertManager;
 use SeanKndy\AlertManager\Alerts\Alert;
 use SeanKndy\AlertManager\Alerts\Queue;
 use SeanKndy\AlertManager\Routing\RoutableInterface;
+use SeanKndy\AlertManager\Auth\AuthorizerInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use React\EventLoop\LoopInterface;
 use React\Http\Response as HttpResponse;
