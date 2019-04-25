@@ -4,6 +4,7 @@ namespace SeanKndy\AlertManager\Routing;
 use React\EventLoop\LoopInterface;
 use React\Promise\PromiseInterface;
 use SeanKndy\AlertManager\Alerts\Alert;
+use Evenement\EventEmitter;
 /**
  * Router is simply a collection of RoutableInterfaces that by default will
  * attempt to route to each one and upon successfully routing, stop any further
@@ -17,7 +18,7 @@ use SeanKndy\AlertManager\Alerts\Alert;
  * continuable route-chain, but only if the Alert was indeed routed to at least
  * one of the continued routes.
  */
-class Router implements RoutableInterface, \Countable
+class Router extends EventEmitter implements RoutableInterface, \Countable
 {
     /**
      * @var \SplObjectStorage
@@ -46,6 +47,7 @@ class Router implements RoutableInterface, \Countable
         foreach ($this->routes as $action => $route) {
             if ($promise = $route->route($alert)) {
                 $promises[] = $promise;
+                $this->emit('routed', [$alert, $route]);
 
                 if ($action != self::CONTINUE) {
                     break;
