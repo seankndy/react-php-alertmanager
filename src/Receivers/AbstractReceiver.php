@@ -200,7 +200,7 @@ abstract class AbstractReceiver implements ReceivableInterface
      */
     public function isActivelyScheduled()
     {
-        if (!$this->schedules) {
+        if (\count($this->schedules) == 0) {
             return true;
         }
 
