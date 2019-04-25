@@ -56,10 +56,7 @@ class Router extends EventEmitter implements RoutableInterface, \Countable
                 break;
             }
         }
-        if ($promises) {
-            return \React\Promise\all($promises);
-        }
-        return null;
+        return \count($promises) > 0 ? \React\Promise\all($promises) : null;
     }
 
     /**

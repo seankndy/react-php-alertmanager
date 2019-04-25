@@ -28,7 +28,7 @@ class Group implements RoutableInterface, \Countable
                 $promises[] = $promise;
             }
         }
-        return $promises ? \React\Promise\all($promises) : null;
+        return \count($promises) > 0 ? \React\Promise\all($promises) : null;
     }
 
     /**
