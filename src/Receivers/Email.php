@@ -26,7 +26,7 @@ class Email extends AbstractReceiver
     public function __construct(LoopInterface $loop, string $emailAddress, array $config)
     {
         parent::__construct();
-        
+
         $this->loop = $loop;
         $this->emailAddress = $emailAddress;
         $this->config = \array_merge([
@@ -57,14 +57,18 @@ class Email extends AbstractReceiver
                 \date(DATE_ATOM, $alert->getAttributes()['expiresAt']) . '.';
         } else {
             $env = $this->config;
-            $env['from'] = $alert->isRecovered() ? $this->config['recovery_from'] :
+            $env['from'] = $alert->isRecovered() ?
+                $this->config['recovery_from'] :
                 $this->config['active_from'];
             $env['to'] = $this->emailAddress;
             $env['subject'] = $this->interpolate(
                 $alert->getAttributes(), $this->config['subject_template']
             );
             $env['message'] = $this->interpolate(
-                $alert->getAttributes(), $this->config['message_template']
+                $alert->getAttributes(),
+                ($alert->isRecovered() ?
+                    'RECOVERED from ' . $this->config['message_template'] :
+                    $this->config['message_template'])
             );
         }
 
