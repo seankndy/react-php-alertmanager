@@ -294,6 +294,7 @@ abstract class AbstractReceiver implements ReceivableInterface
     public function __toString()
     {
         return 'num-schedules=' . \count($this->schedules) . '; ' .
+            'receive-recoveries=' . ($this->receiveRecoveries ? 'TRUE' : 'FALSE') . '; ' .
             'repeat-interval=' . $this->repeatInterval . 'sec; ' .
             'alert-delay=' . $this->alertDelay . 'sec; ' .
             'num-filters=' . \count($this->filters);
