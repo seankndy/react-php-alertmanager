@@ -9,6 +9,8 @@ to write your own receivers for PagerDuty, a database, etc...
 
 ## HTTP JSON API - Alert Format
 
+JSON should be POSTed to http://x.x.x.x:port/api/v1/alerts in the following format:
+
 ```json
 {
     "name":"unique.alert.name",
@@ -24,13 +26,16 @@ to write your own receivers for PagerDuty, a database, etc...
 
 'name' should be a unique name for the alert, but should stay consistent between submissions if it's the same incident.
 
-'expiryDuration' is how long before the alert is auto-expired if its not updated.
+'expiryDuration' is optional and will default to whatever `\SeanKndy\AlertManager\Server::defaultExpiryDuration` is set to.  It is how long before the alert is auto-expired if it has not updated.
 
 'state' is optional and defaults to `ACTIVE`.  It can be `ACTIVE` or `RECOVERED`.
 
 'createdAt' is optional and is when the alert originally fired.  If this is blank, the current time is used.
 
 'attributes' is any number of key/value pairs and is specific to your environment. Routes use information within attributes to make decisions (see below).
+
+You can also submit multiple alerts at once by putting each alert within an array and submitting that JSON-encoded.
+
 
 AlertManager expects your collector to continually send the incident/alert into it as long as that incident is still active.
 When the incident clears/service is green, then you can either stop submitting the alert and in expiryDuration seconds it will
