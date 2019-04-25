@@ -138,8 +138,8 @@ class Server extends EventEmitter
         foreach ($this->queue as $alert) {
             if ($alert->isActive() && $alert->hasExpired()) {
                 // expire alert
-                $this->emit('alert.expired', [$alert]);
                 $alert->setState(Alert::RECOVERED);
+                $this->emit('alert.expired', [$alert]);
             }
             if (!$alert->isDeleted()) {
                 if ($promise = $this->router->route($alert)) {
