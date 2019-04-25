@@ -138,6 +138,7 @@ class Server extends EventEmitter
         foreach ($this->queue as $alert) {
             if ($alert->isActive() && $alert->hasExpired()) {
                 // expire alert
+                $this->emit('alert.expired', [$e]);
                 $alert->setState(Alert::RECOVERED);
             }
             if (!$alert->isDeleted()) {
@@ -147,7 +148,9 @@ class Server extends EventEmitter
             }
         }
 
-        \React\Promise\all($promises)->always(function() {
+        \React\Promise\all($promises)->otherwise(function (\Throwable $e) {
+            $this->emit('error', [$e]);
+        })->always(function() {
             // remove deleted and recovered alerts
             foreach ($this->queue as $key => $alert) {
                 if (!$alert->isActive()) {
