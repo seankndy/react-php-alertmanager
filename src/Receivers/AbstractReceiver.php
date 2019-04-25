@@ -8,11 +8,11 @@ use SeanKndy\AlertManager\Scheduling\ScheduleInterface;
 abstract class AbstractReceiver implements ReceivableInterface
 {
     /**
-     * Schedules determing when the receiver is active
+     * ScheduleInterface determining when the receiver is active
      * An empty schedule means always on-call/active
-     * @var ScheduleInterface[]
+     * @var \SplObjectStorage
      */
-    protected $schedules = [];
+    protected $schedules = null;
     /**
      * How many seconds after initial notify to continually re-notify.
      * @var int
@@ -29,9 +29,15 @@ abstract class AbstractReceiver implements ReceivableInterface
      */
     protected $alertDelay = 10;
     /**
-     * @var FilterInterface[]
+     * @var \SplObjectStorage
      */
-    protected $filters = [];
+    protected $filters = null;
+
+    public function __construct()
+    {
+        $this->schedules = new \SplObjectStorage();
+        $this->filters = new \SplObjectStorage();
+    }
 
     /**
      * {@inheritDoc}
@@ -96,13 +102,25 @@ abstract class AbstractReceiver implements ReceivableInterface
      */
     public function addSchedule(ScheduleInterface $schedule)
     {
-        $this->schedules[] = $schedule;
+        $this->schedules->attach($schedule);
 
         return $this;
     }
 
     /**
-     * Set the value of Schedules determing when the receiver is active
+     * Remove ScheduleInterface
+     *
+     * @return self
+     */
+    public function removeSchedule(ScheduleInterface $schedule)
+    {
+        $this->schedules->detach($schedule);
+
+        return $this;
+    }
+
+    /**
+     * Set all schedules via an array
      *
      * @param ScheduleInterface[] schedules
      *
@@ -110,7 +128,10 @@ abstract class AbstractReceiver implements ReceivableInterface
      */
     public function setSchedules(array $schedules)
     {
-        $this->schedules = $schedules;
+        $this->schedules = new \SplObjectStorage();
+        foreach ($schedules as $schedule) {
+            $this->addSchedule($schedule);
+        }
 
         return $this;
     }
@@ -122,7 +143,7 @@ abstract class AbstractReceiver implements ReceivableInterface
      */
     public function getSchedules()
     {
-        return $this->schedules;
+        return \iterator_to_array($this->schedules);
     }
 
     /**
@@ -216,7 +237,7 @@ abstract class AbstractReceiver implements ReceivableInterface
     }
 
     /**
-     * Add FilterInterface for this receiver
+     * Add FilterInterface
      *
      * @param FilterInterface $filter
      *
@@ -224,7 +245,21 @@ abstract class AbstractReceiver implements ReceivableInterface
      */
     public function addFilter(FilterInterface $filter)
     {
-        $this->filters[] = $filter;
+        $this->filters->attach($filter);
+
+        return $this;
+    }
+
+    /**
+     * Remove FilterInterface
+     *
+     * @param FilterInterface $filter Filter to remove
+     *
+     * @return self
+     */
+    public function removeFilter(FilterInterface $filter)
+    {
+        $this->filters->detach($filter);
 
         return $this;
     }
@@ -239,6 +274,16 @@ abstract class AbstractReceiver implements ReceivableInterface
         $this->filters = [];
 
         return $this;
+    }
+
+    /**
+     * Get the filters for this receiver
+     *
+     * @return FilterInterface[]
+     */
+    public function getFilters()
+    {
+        return \iterator_to_array($this->filters);
     }
 
     /**

@@ -33,13 +33,19 @@ class Server extends EventEmitter
      * @var int
      */
     private $defaultExpiryDuration = 600; // 10min
+    /**
+     * Used to verify user access to API
+     * @var AuthorizerInterface
+     */
+    private $authorizer = null;
 
     public function __construct(string $listen, LoopInterface $loop,
-        RoutableInterface $router)
+        RoutableInterface $router, AuthorizerInterface $authorizer = null)
     {
         $this->loop = $loop;
         $this->router = $router;
         $this->queue = new Queue();
+        $this->authorizer = $authorizer;
 
         $this->httpServer = new HttpServer(function (ServerRequestInterface $request) {
             return $this->handleRequest($request);
@@ -74,32 +80,53 @@ class Server extends EventEmitter
             );
         }
 
-        // must have valid authorization key
-        // should fire off code to verify $request->getHeaderLine('Authorization'));
+        if ($authorizer) {
+            $authPromise = $authorizer->authorize($request);
+        } else {
+            $authPromise = \React\Promise\resolve(true);
+        }
+        return $authPromise->then(function (bool $authenticated) use ($request) {
+            if (!$authenticated) {
+                return new HttpResponse(
+                    401,
+                    ['Content-Type' => 'application/json'],
+                    \json_encode(['status' => 'error'])
+                );
+            }
 
-        // build Alerts from request body
-        try {
-            $alerts = Alert::fromJSON((string)$request->getBody(), $this->defaultExpiryDuration);
-        } catch (\Throwable $e) {
+            // build Alerts from request body
+            try {
+                $alerts = Alert::fromJSON(
+                    (string)$request->getBody(),
+                    $this->defaultExpiryDuration
+                );
+            } catch (\Throwable $e) {
+                return new HttpResponse(
+                    400,
+                    ['Content-Type' => 'application/json'],
+                    \json_encode(['status' => 'error'])
+                );
+            }
+
+            // queue alerts
+            foreach ($alerts as $alert) {
+                $this->emit('alert', [$alert]);
+                $this->queue->enqueue($alert);
+            }
+
+            // return positivity
             return new HttpResponse(
-                400,
+                201,
+                ['Content-Type' => 'application/json'],
+                \json_encode(['status' => 'success'])
+            );
+        }, function (\Exception $e) { // error during authorization
+            return new HttpResponse(
+                500,
                 ['Content-Type' => 'application/json'],
                 \json_encode(['status' => 'error'])
             );
-        }
-
-        // queue alerts
-        foreach ($alerts as $alert) {
-            $this->emit('alert', [$alert]);
-            $this->queue->enqueue($alert);
-        }
-
-        // return positivity
-        return new HttpResponse(
-            201,
-            ['Content-Type' => 'application/json'],
-            \json_encode(['status' => 'success'])
-        );
+        });
     }
 
     private function processQueue()
@@ -107,7 +134,6 @@ class Server extends EventEmitter
         $this->queue->settle();
 
         $promises = [];
-        echo "queue has " . \count($this->queue) . " entries\n";
         foreach ($this->queue as $alert) {
             if ($alert->isActive() && $alert->hasExpired()) {
                 // expire alert
@@ -137,6 +163,13 @@ class Server extends EventEmitter
     public function setDefaultExpiryDuration(int $duration)
     {
         $this->defaultExpiryDuration = $duration;
+
+        return $this;
+    }
+
+    public function setAuthorizer(AuthorizerInterface $authorizer)
+    {
+        $this->authorizer = $authorizer;
 
         return $this;
     }

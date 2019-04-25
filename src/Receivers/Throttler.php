@@ -43,8 +43,8 @@ class Throttler extends ReceiverDecorator
      */
     protected $holdDownStartTime = 0;
     /**
-     * A receiver to send a special notification (Alert) to notify that the
-     * original receiver has been throttled.
+     * A receiver to send a special notification (ThrottledReceiverAlert) to
+     * notify that the original receiver has been throttled.
      * @var AbstractReceiver
      */
     protected $onHoldDownReceiver = null;
