@@ -8,6 +8,12 @@ the `\SeanKndy\AlertManager\Receivers\ReceivableInterface` interface.  `Abstract
 scheduling, filtering, initial delay and whether or not to receive recovered alerts. Included with AlertManager is an Email receiver, but
 it's very simple to write your own receivers such as to PagerDuty, a database, Slack, etc...
 
+This is similar to Prometheus' Alertmanager, however it's obviously written in PHP and is far simpler.  I wrote it because the rest my monitoring
+infrastructure is written in PHP as well and I wanted the ability to very easily extend functionality in this environment.  Because the routing is defined
+within PHP, it's very simple to programmatically build your routes from any source (be it flat file like Prometheus, a database, or whatever).  Also, the
+ability to do receiver scheduling, filtering, null routing, and simply how the routing logic is done I believe is quite different from Prometheus and better
+suits my needs.
+
 ## HTTP JSON API - Alert Format
 
 JSON should be POSTed to http://x.x.x.x:port/api/v1/alerts in the following format:
