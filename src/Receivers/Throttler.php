@@ -79,7 +79,7 @@ class Throttler extends ReceiverDecorator
         if ($this->hitCount >= $this->hitThreshold) {
             $this->holdDownStartTime = \time();
             if ($this->onHoldDownReceiver) {
-                $this->onHoldDownReceiver->receive(new ThrottledReceiverAlert(
+                $this->onHoldDownReceiver->route(new ThrottledReceiverAlert(
                     $this->holdDownStartTime+$this->holdDown
                 ));
             }
