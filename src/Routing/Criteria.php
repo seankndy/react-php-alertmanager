@@ -48,8 +48,10 @@ class Criteria
     public function where($key, $match = null)
     {
         if (\is_callable($key)) {
-            $criteria = (new self())
-                ->add($this);
+            $criteria = new self();
+            if ($this->criteria) {
+                $criteria->add($this);
+            }
             $newCriteria = new self();
             $newCriteria = $key($newCriteria);
             return $criteria->add($newCriteria);
@@ -73,8 +75,10 @@ class Criteria
     public function orWhere($key, $match = null)
     {
         if (\is_callable($key)) {
-            $criteria = (new self(self::OR))
-                ->add($this);
+            $criteria = new self(self::OR);
+            if ($this->criteria) {
+                $criteria->add($this);
+            }
             $newCriteria = new self();
             $newCriteria = $key($newCriteria);
             return $criteria->add($newCriteria);
@@ -162,5 +166,51 @@ class Criteria
     public function isAnd()
     {
         return $this->logic == self::AND;
+    }
+
+    /**
+     * String representation of the criteria, similar to SQL WHERE syntax
+     *
+     * @return string
+     */
+    public function __toString()
+    {
+        if (!$this->criteria)
+            return '';
+
+        $str = '(';
+        $logicSep = '';
+        foreach ($this->criteria as $criteria) {
+            if ($criteria instanceof self) {
+                $str .= ($logicSep ? ' '.$logicSep.' ' : '') .
+                    (string)$criteria;
+            } else {
+                $key = \key($criteria);
+                $match = \current($criteria);
+
+                $regex = false;
+                if (substr($key, 0, 6) == 'regex:') {
+                    $key = substr($key, 6);
+                    $regex = true;
+                }
+
+                if ($regex) {
+                    $str .= ($logicSep ? ' '.$logicSep.' ' : '') .
+                        $key . '=' . $match;
+                } else {
+                    if (!\is_array($match)) {
+                        $str .= ($logicSep ? ' '.$logicSep.' ' : '') .
+                            $key . '=' . $match;
+                    } else {
+                        $str .= ($logicSep ? ' '.$logicSep.' ' : '') .
+                            $key . ' IN(' . \implode(',', $match) . ')';
+                    }
+                }
+            }
+            $logicSep = $this->logic;
+        }
+        $str .= ')';
+
+        return $str;
     }
 }

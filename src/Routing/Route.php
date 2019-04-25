@@ -123,4 +123,10 @@ class Route implements RoutableInterface
 
         return $this;
     }
+
+    public function __toString()
+    {
+        return 'criteria=' . (string)$this->critera . '; ' .
+            'destination=('.(\is_null($this->destination) ? 'NULL' : (string)$this->destination).')';
+    }
 }
