@@ -126,7 +126,7 @@ class Route implements RoutableInterface
 
     public function __toString()
     {
-        return 'criteria=' . (string)$this->critera . '; ' .
+        return 'criteria=' . (string)$this->criteria . '; ' .
             'destination=('.(\is_null($this->destination) ? 'NULL' : (string)$this->destination).')';
     }
 }
