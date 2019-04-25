@@ -152,7 +152,7 @@ class Alert
      */
     public function setState(string $state)
     {
-        if (!\in_array($this->state, [self::ACTIVE, self::RECOVERED, self::DELETED])) {
+        if (!\in_array($state, [self::ACTIVE, self::RECOVERED, self::DELETED])) {
             throw new \InvalidArgumentException("Invalid state given: $state");
         }
         $this->state = $state;
