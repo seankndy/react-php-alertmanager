@@ -154,6 +154,7 @@ class Server extends EventEmitter
             // remove deleted and recovered alerts
             foreach ($this->queue as $key => $alert) {
                 if (!$alert->isActive()) {
+                    $this->emit('alert.deleted', [$this->queue[$key]]);
                     unset($this->queue[$key]);
                 }
             }
