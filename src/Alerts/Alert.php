@@ -201,6 +201,15 @@ class Alert
      */
     public function addDispatchedReceiver(ReceivableInterface $receiver)
     {
+        // TODO: this doesn't account for recovery alerts where the Alert object
+        // is the same, but the state has just changed to RECOVERED.  This causes
+        // every "continuable" route that matches to send the RECOVERED alert to
+        // the receiver and isReceivable() gladly returns true because its only
+        // requirement is that the alert is recovered and that the receiver got
+        // a notice when it was ACTIVE.  so what ends up happening is one receiver
+        // can get duplicates of recovieries.
+
+        // this needs modofied to track not only the time but also the state of the alert 
         $this->dispatchedReceivers->attach($receiver, \time());
 
         return $this;
