@@ -8,10 +8,9 @@ class Alert
 {
     const ACTIVE = 'ACTIVE';
     const RECOVERED = 'RECOVERED';
-    const DELETED = 'DELETED';
 
     /**
-     * State: either ACTIVE, RECOVERED or DELETED
+     * State: either ACTIVE, RECOVERED
      * @var int
      */
     protected $state;
@@ -44,7 +43,7 @@ class Alert
      * Keep history of which Receiver's this Alert has dispatched to.
      * @var \SplObjectStorage
      */
-    private $dispatchedReceivers;
+    private $dispatchLog;
 
     public function __construct($name, string $state, array $attributes,
         int $createdAt = 0, int $expiryDuration = 600)
@@ -55,7 +54,7 @@ class Alert
         $this->createdAt = $createdAt ? $createdAt : \time();
         $this->updatedAt = \time();
         $this->expiryDuration = $expiryDuration;
-        $this->dispatchedReceivers = new \SplObjectStorage();
+        $this->dispatchLog = new \SplObjectStorage();
     }
 
     /**
@@ -67,7 +66,7 @@ class Alert
      */
     public function dispatch(ReceivableInterface $receiver)
     {
-        $this->addDispatchedReceiver($receiver);
+        $this->logDispatch($receiver);
         return $receiver->receive($this);
     }
 
@@ -152,7 +151,7 @@ class Alert
      */
     public function setState(string $state)
     {
-        if (!\in_array($state, [self::ACTIVE, self::RECOVERED, self::DELETED])) {
+        if (!\in_array($state, [self::ACTIVE, self::RECOVERED])) {
             throw new \InvalidArgumentException("Invalid state given: $state");
         }
         $this->state = $state;
@@ -171,61 +170,68 @@ class Alert
     }
 
     /**
-     * Get the value of dispatchedReceivers
+     * Get the dispatch log
      *
      * @return \SplObjectStorage
      */
-    public function getDispatchedReceivers()
+    public function getDispatchLog()
     {
-        return $this->dispatchedReceivers;
+        return $this->dispatchLog;
     }
 
     /**
-     * Set the value of dispatchedReceivers
+     * Set the value of dispatchLog
      *
-     * @param \SplObjectStorage $receivers
+     * @param \SplObjectStorage $log
      *
      * @return self
      */
-    public function setDispatchedReceivers(\SplObjectStorage $receivers)
+    public function setDispatchLog(\SplObjectStorage $log)
     {
-        $this->dispatchedReceivers = $receivers;
+        $this->dispatchLog = $log;
 
         return $this;
     }
 
     /**
-     * Add a dispatched receiver
+     * Log a dispatch to receiver
+     *
+     * @param ReceivableInterface $receiver Receiver dispatched to
+     * @param string $forState State of Alert when dispatched
      *
      * @return self
      */
-    public function addDispatchedReceiver(ReceivableInterface $receiver)
+    public function logDispatch(ReceivableInterface $receiver, string $forState = null)
     {
-        // TODO: this doesn't account for recovery alerts where the Alert object
-        // is the same, but the state has just changed to RECOVERED.  This causes
-        // every "continuable" route that matches to send the RECOVERED alert to
-        // the receiver and isReceivable() gladly returns true because its only
-        // requirement is that the alert is recovered and that the receiver got
-        // a notice when it was ACTIVE.  so what ends up happening is one receiver
-        // can get duplicates of recovieries.
-
-        // this needs modofied to track not only the time but also the state of the alert 
-        $this->dispatchedReceivers->attach($receiver, \time());
-
-        return $this;
-    }
-
-    /**
-     * Get the dispatched timestamp for Receiver $receiver
-     *
-     * @return int|null
-     */
-    public function getDispatchedReceiverTime(ReceivableInterface $receiver)
-    {
-        if ($this->dispatchedReceivers->contains($receiver)) {
-            return $this->dispatchedReceivers[$receiver];
+        if (!$forState) {
+            $forState = $this->state;
         }
-        return null;
+
+        if (isset($this->dispatchLog[$receiver])) {
+            $log = $this->dispatchLog[$receiver];
+        } else {
+            $log = [];
+        }
+        $log[$forState] = \time();
+
+        $this->dispatchLog[$receiver] = $log;
+
+        return $this;
+    }
+
+    /**
+     * Get the dispatch log for a receiver
+     *
+     * @param ReceivableInterface $receiver
+     *
+     * @return array
+     */
+    public function getDispatchLogForReceiver(ReceivableInterface $receiver)
+    {
+        if (isset($this->dispatchLog[$receiver])) {
+            return $this->dispatchLog[$receiver];
+        }
+        return [];
     }
 
     /**
@@ -246,16 +252,6 @@ class Alert
     public function isRecovered()
     {
         return $this->state === self::RECOVERED;
-    }
-
-    /**
-     * Helper to determine if state == DELETED
-     *
-     * @return bool
-     */
-    public function isDeleted()
-    {
-        return $this->state === self::DELETED;
     }
 
     /**
@@ -373,6 +369,6 @@ class Alert
             'created-at=' . date(DATE_ATOM, $this->createdAt) . '; ' .
             'updated-at=' . date(DATE_ATOM, $this->updatedAt) . '; ' .
             'expiry-duration=' . $this->expiryDuration . 'sec; ' .
-            'num-disaptched-receivers=' . \count($this->dispatchedReceivers);
+            'num-dispatched=' . \count($this->dispatchLog);
     }
 }

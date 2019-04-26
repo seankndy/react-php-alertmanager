@@ -141,17 +141,15 @@ class Server extends EventEmitter
                 $alert->setState(Alert::RECOVERED);
                 $this->emit('alert.expired', [$alert]);
             }
-            if (!$alert->isDeleted()) {
-                if ($promise = $this->router->route($alert)) {
-                    $promises[] = $promise;
-                }
+            if ($promise = $this->router->route($alert)) {
+                $promises[] = $promise;
             }
         }
 
         \React\Promise\all($promises)->otherwise(function (\Throwable $e) {
             $this->emit('error', [$e]);
         })->always(function() {
-            // remove deleted and recovered alerts
+            // remove recovered alerts
             foreach ($this->queue as $key => $alert) {
                 if (!$alert->isActive()) {
                     $this->emit('alert.deleted', [$this->queue[$key]]);

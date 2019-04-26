@@ -70,18 +70,22 @@ abstract class AbstractReceiver implements ReceivableInterface
             }
         }
 
+        $dispatchLog = $alert->getDispatchLogForReceiver($this);
+
         if ($alert->isRecovered()) {
             // only send recovery if:
             // 1) receiveRecoveries is ON
             // 2) receiver received the active form of alert already
+            // 3) receiver has not received recovered form already
             return $this->receiveRecoveries &&
-                $alert->getDispatchedReceiverTime($this);
+                isset($dispatchLog[Alert::ACTIVE])
+                && !isset($dispatchLog[Alert::RECOVERED]);
         }
 
         // only allow alert if delay time has elapsed since alert creation
         $minTime = $alert->getCreatedAt() + $this->alertDelay;
         if (\time() >= $minTime) {
-            $lastReceivedTime = $alert->getDispatchedReceiverTime($this);
+            $lastReceivedTime = $dispatchLog[$alert->getState()] ?? 0;
             if ($lastReceivedTime) {
                 // do not allow alert that has already been received
                 // and interval has not elapsed
