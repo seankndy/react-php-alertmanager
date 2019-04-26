@@ -57,6 +57,7 @@ class Throttler extends ReceiverDecorator
         if ($this->holdDownStartTime) {
             if (\time() - $this->holdDownStartTime < $this->holdDown) {
                 // under holddown, just silently return
+                $alert->addDispatchedReceiver($this->receiver);
                 return \React\Promise\resolve([]);
             } else {
                 // holddown expired, reset to 0
@@ -83,8 +84,8 @@ class Throttler extends ReceiverDecorator
                     $this->holdDownStartTime+$this->holdDown
                 ));
             }
-            // we're now under hold down, so register the receiver as if it was
-            // dispatched to the receiver, but silently consume the alert.
+            // we're now under hold down, so register the receiver in the alert
+            // as if it was dispatched to the receiver, but silently consume the alert.
             $alert->addDispatchedReceiver($this->receiver);
             return \React\Promise\resolve([]);
         }

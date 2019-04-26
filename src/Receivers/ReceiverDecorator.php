@@ -22,10 +22,10 @@ abstract class ReceiverDecorator implements ReceivableInterface
      */
     public function route(Alert $alert) : ?PromiseInterface
     {
-        if (!$this->receiver->isReceivable($alert)) {
-            return null;
+        if ($this->receiver->isReceivable($alert)) {
+            return $this->receive($alert);
         }
-        return $this->receive($alert);
+        return null;
     }
 
     /**
