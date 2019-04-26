@@ -275,7 +275,7 @@ abstract class AbstractReceiver implements ReceivableInterface
      */
     public function clearFilters()
     {
-        $this->filters = [];
+        $this->filters = new \SplObjectStorage();
 
         return $this;
     }
