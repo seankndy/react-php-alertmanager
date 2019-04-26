@@ -55,7 +55,7 @@ auto-resolve, or you can submit the alert with status set to `RECOVERED` to expi
 use SeanKndy\AlertManager\Server;
 use SeanKndy\AlertManager\Routing\Route;
 use SeanKndy\AlertManager\Routing\Router;
-use SeanKndy\AlertManager\Routing\Group;
+use SeanKndy\AlertManager\Receivers\Group;
 use SeanKndy\AlertManager\Receivers\Email;
 
 $loop = \React\EventLoop\Factory::create();
@@ -102,7 +102,7 @@ If you want to route to a group of receivers, use a `SeanKndy\AlertManager\Routi
 ```php
 use SeanKndy\AlertManager\Routing\Route;
 use SeanKndy\AlertManager\Routing\Router;
-use SeanKndy\AlertManager\Routing\Group;
+use SeanKndy\AlertManager\Receivers\Group;
 use SeanKndy\AlertManager\Receivers\Email;
 
 $colin = new Email($loop, 'colin@somecompany.com', $smtpConfig);
