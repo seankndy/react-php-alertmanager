@@ -44,7 +44,8 @@ class Router extends EventEmitter implements RoutableInterface, \Countable
     public function route(Alert $alert) : ?PromiseInterface
     {
         $promises = [];
-        foreach ($this->routes as $action => $route) {
+        foreach ($this->routes as $route) {
+            $action = $this->routes[$route];
             if ($promise = $route->route($alert)) {
                 $promises[] = $promise;
                 $this->emit('routed', [$alert, $route]);
