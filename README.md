@@ -83,7 +83,7 @@ $router->addRoutes([
     Route::toDestination($sean)->where('tag', 'routers'),
     Route::toDestination($colin)->where('tag', 'wireless'),
     Route::toDestination($rob)->where('tag', 'switching')
-);
+]);
 
 $server = new \SeanKndy\AlertManager\Server('0.0.0.0:8514', $loop, $router);
 $loop->run();
@@ -150,7 +150,7 @@ This would be similar to saying `Route::toDestination($receiverA)->where('tag', 
 
 You can also issue a series of continue() calls followed by a stop() to stop the continuable route-chain but only if a route was actually routed to.  In other words, if any of the continued routes actually route, then stop at the stop().  If no routes matched, stop() does nothing.
 
-This is useful if you have a hierarchy of routes and if any of the top-level of routes match, you don't want any of the routes below the it in the hierarchy to route. In this case you'd have continue() on every route in the top level hierarchy except the last one would have a stop() between the top level and the next level below it.
+This is useful if you have a hierarchy of routes and you want any of the routes within the same level to be tested/routed and if anything in that level routes, you want to stop.  If nothing matched at that level, you want to move on to the next level below it.   In this case, every route in the same level would have continue()s except the last route on that level which would have a stop().
 
 ## Alert Throttling
 
