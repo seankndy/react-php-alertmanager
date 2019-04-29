@@ -59,18 +59,21 @@ class Route implements RoutableInterface
     }
 
     /**
-     * Route Alert to destination (if matching)
+     * Test route on Alert
+     *
+     * @return bool
+     */
+    public function test(Alert $alert)
+    {
+        return ($this->criteria && $this->criteria->matches($alert));
+    }
+
+    /**
+     * {@inheritDoc} Route Alert to destination
      */
     public function route(Alert $alert) : ?PromiseInterface
     {
-        if (!$this->criteria || !$this->criteria->matches($alert)) {
-            return null; // not routable by this route, return NULL
-        }
         if (!$this->destination) {
-            // if alert null-routed, then we can just delete
-            // the alert entirely as it will never route to any
-            // receiver.
-            //$alert->setState(Alert::DELETED);
             return \React\Promise\resolve([]);
         }
         return $this->destination->route($alert);

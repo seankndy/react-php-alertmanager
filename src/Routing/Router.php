@@ -6,7 +6,7 @@ use React\Promise\PromiseInterface;
 use SeanKndy\AlertManager\Alerts\Alert;
 use Evenement\EventEmitter;
 /**
- * Router is simply a collection of RoutableInterfaces that by default will
+ * Router is simply a collection of Routes that by default will
  * attempt to route to each one and upon successfully routing, stop any further
  * routing to routes added after it.
  *
@@ -44,16 +44,21 @@ class Router extends EventEmitter implements RoutableInterface, \Countable
     public function route(Alert $alert) : ?PromiseInterface
     {
         $promises = [];
+        $matched = false;
         foreach ($this->routes as $route) {
             $action = $this->routes[$route];
-            if ($promise = $route->route($alert)) {
-                $promises[] = $promise;
-                $this->emit('routed', [$alert, $route]);
+            if ($route->test($alert)) {
+                $matched = true;
+                if ($promise = $route->route($alert)) {
+                    $promises[] = $promise;
+                    $this->emit('routed', [$alert, $route]);
 
-                if ($action != self::CONTINUE) {
-                    break;
+                    if ($action != self::CONTINUE) {
+                        break;
+                    }
                 }
-            } else if ($action == self::STOP && \count($promises) > 0) {
+            }
+            if ($action == self::STOP && $matched) {
                 break;
             }
         }
@@ -65,7 +70,7 @@ class Router extends EventEmitter implements RoutableInterface, \Countable
      *
      * @return self
      */
-    public function addRoute(RoutableInterface $route)
+    public function addRoute(Route $route)
     {
         $this->routes[$route] = self::END;
         $this->lastRoute = $route;
@@ -80,7 +85,7 @@ class Router extends EventEmitter implements RoutableInterface, \Countable
      *
      * @return bool
      */
-    public function hasRoute(RoutableInterface $route)
+    public function hasRoute(Route $route)
     {
         return $this->routes->contains($route);
     }
@@ -90,7 +95,7 @@ class Router extends EventEmitter implements RoutableInterface, \Countable
      *
      * @return self
      */
-    public function removeRoute(RoutableInterface $route)
+    public function removeRoute(Route $route)
     {
         $this->routes->detach($route);
 
@@ -120,7 +125,7 @@ class Router extends EventEmitter implements RoutableInterface, \Countable
     /**
      * Get all routes
      *
-     * @return \SplObjectStorage|RoutableInterface[]
+     * @return \SplObjectStorage|Route[]
      */
     public function getRoutes($asArray = false)
     {
