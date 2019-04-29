@@ -66,7 +66,7 @@ class Router extends EventEmitter implements RoutableInterface, \Countable
     }
 
     /**
-     * Add Route
+     * Add Route object
      *
      * @return self
      */
@@ -74,6 +74,22 @@ class Router extends EventEmitter implements RoutableInterface, \Countable
     {
         $this->routes[$route] = self::END;
         $this->lastRoute = $route;
+
+        return $this;
+    }
+
+    /**
+     * Add Route objects
+     *
+     * @param Route[] $routes Array of Route objects to add
+     *
+     * @return self
+     */
+    public function addRoutes(array $routes)
+    {
+        foreach ($routes as $route) {
+            $this->addRoute($route);
+        }
 
         return $this;
     }

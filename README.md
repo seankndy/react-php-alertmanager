@@ -78,16 +78,10 @@ $levi = new Email($loop, 'levi@somecompany.com', $smtpConfig);
 // to receivers or even other Routers.
 //
 $router = new Router();
-$router->addRoute(
-    Route::toDestination($levi)->where('tag', 'servers')
-);
-$router->addRoute(
-    Route::toDestination($sean)->where('tag', 'routers')
-);
-$router->addRoute(
-    Route::toDestination($colin)->where('tag', 'wireless')
-);
-$router->addRoute(
+$router->addRoutes([
+    Route::toDestination($levi)->where('tag', 'servers'),
+    Route::toDestination($sean)->where('tag', 'routers'),
+    Route::toDestination($colin)->where('tag', 'wireless'),
     Route::toDestination($rob)->where('tag', 'switching')
 );
 
@@ -113,12 +107,10 @@ $levi = new Email($loop, 'levi@somecompany.com', $smtpConfig);
 $networkGroup = new Group([$sean, $rob]);
 $serverGroup = new Group([$colin, $levi]);
 
-$router->addRoute(
-    Route::toDestination($serverGroup)->where('tag', 'servers')
-);
-$router->addRoute(
+$router->addRoutes([
+    Route::toDestination($serverGroup)->where('tag', 'servers'),
     Route::toDestination($networkGroup)->where('tag', ['routers','switching'])
-);
+]);
 ```
 
 ## Conditional Logic Groups
@@ -127,7 +119,7 @@ You can create complex logical grouping on your Route where() statements by usin
 
 ```php
 $router->addRoute(
-    // will produce logic of:  (tag='servers' AND (cluster IN(24,25) or os='vmware'))
+    // will produce logic of:  (tag='servers' AND (cluster IN(24,25) OR os='vmware'))
     Route::toDestination($receiver)
         ->where('tag', 'servers')
         ->where(function($criteria) {
@@ -147,14 +139,18 @@ this behavior by using continue():
 
 ```php
 $router->addRoute(
-    Route::toDestination($receiver)->where('tag', 'servers')
+    Route::toDestination($receiverA)->where('tag', 'servers')
 )->continue();
 $router->addRoute(
-    Route::toDestination($receiver)->where('tag', 'network')
+    Route::toDestination($receiverA)->where('tag', 'network')
 );
 ```
 
+This would be similar to saying `Route::toDestination($receiverA)->where('tag', ['servers','network'])`.
+
 You can also issue a series of continue() calls followed by a stop() to stop the continuable route-chain but only if a route was actually routed to.  In other words, if any of the continued routes actually route, then stop at the stop().  If no routes matched, stop() does nothing.
+
+This is useful if you have a hierarchy of routes and if any of the top-level of routes match, you don't want any of the routes below the it in the hierarchy to route. In this case you'd have continue() on every route in the top level hierarchy except the last one would have a stop() between the top level and the next level below it.
 
 ## Alert Throttling
 
@@ -184,6 +180,20 @@ Any receivers that extend AbstractReceiver can have a time-based schedule to rec
 
 ## Receiver Filtering
 
-Similar to scheduling, receivers can filter alerts as well.  AbstractReceiver provides an addFilter() method where you can specify a `\SeanKndy\AlertManager\Receivers\FilterInterface` implementation object.
+Similar to scheduling, receivers can filter alerts as well.  AbstractReceiver provides an addFilter() method where you can specify a `\SeanKndy\AlertManager\Receivers\FilterInterface` implementation object.  Quick example:
 
-Note that both Scheduling and Filtering expect simple boolean return values, so they cannot do any IO or long-running operations as that will block the process.  The Receivers use a promise-based interface so that they may perform longer IO ops sending mail, connecting to pager services, etc...
+```php
+use SeanKndy\AlertManager\Receivers\FilterInterface;
+use SeanKndy\AlertManager\Receivers\Email;
+
+$sean = new Email($loop, 'sean@somecompany.com', $smtpConfig);
+$sean->addFilter(new class implements FilterInterface {
+    public function isFiltered(Alert $alert) : bool {
+        $attributes = $alert->getAttributes();
+        // i only want alerts with location == Wyoming
+        return ($attributes['location'] == 'Wyoming');
+    }
+});
+```
+
+Note that both Scheduling and Filtering expect simple boolean return values, so they cannot do any IO or long-running operations as that will block the process. The Receivers use a promise-based interface so that they may perform longer IO ops sending mail, connecting to pager services, etc...
