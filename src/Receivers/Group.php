@@ -114,7 +114,7 @@ class Group implements RoutableInterface, \Countable
         $sep = ' -- ';
         $str = '';
         foreach ($this->receivers as $receiver) {
-            $str .= "Receiver #" . ($i++) . ": " . (string)$receiver . $sep;
+            $str .= "Receiver #" . ($i++) . ": [" . (string)$receiver . "]" . $sep;
         }
         return rtrim($str, $sep);
     }

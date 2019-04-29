@@ -296,6 +296,33 @@ class Alert
     }
 
     /**
+     * Convert this Alert object to array
+     *
+     * @return string
+     */
+    public function toArray()
+    {
+        return [
+            'name' => $this->name,
+            'expiryDuration' => $this->expiryDuration,
+            'state' => $this->state,
+            'createdAt' => $this->createdAt,
+            'updatedAt' => $this->updatedAt,
+            'attributes' => $this->attributes
+        ];
+    }
+
+    /**
+     * Convert this Alert object to JSON string
+     *
+     * @return string
+     */
+    public function toJSON()
+    {
+        return \json_encode($this->toArray());
+    }
+
+    /**
      * Set the value of Attributes
      *
      * @param array attributes

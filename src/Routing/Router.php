@@ -100,7 +100,7 @@ class Router extends EventEmitter implements RoutableInterface, \Countable
         $this->routes->detach($route);
 
         if ($route === $this->lastRoute) {
-            foreach ($this->routes as $route => $continue) {
+            foreach ($this->routes as $route) {
                 $this->lastRoute = $route;
             }
         }
@@ -186,7 +186,7 @@ class Router extends EventEmitter implements RoutableInterface, \Countable
         $sep = ' -- ';
         $str = '';
         foreach ($this->routes as $route) {
-            $str .= "Routable #" . ($i++) . ": " . (string)$route . $sep;
+            $str .= "(Routable #" . ($i++) . ": [" . (string)$route . "]" . $sep;
         }
         return rtrim($str, $sep);
     }

@@ -61,15 +61,6 @@ class Server extends EventEmitter
 
     private function handleRequest(ServerRequestInterface $request)
     {
-        // only accept POST
-        if ($request->getMethod() !== 'POST') {
-            return new HttpResponse(
-                405,
-                ['Content-Type' => 'application/json'],
-                \json_encode(['status' => 'error'])
-            );
-        }
-
         // while we don't have any sort of complex api parsing, versioning and
         // routing at this time, i am still going to enforce callers use a path
         // so future non-breakable changes to the API can be made.
@@ -95,32 +86,56 @@ class Server extends EventEmitter
                 );
             }
 
-            // build Alerts from request body
-            try {
-                $alerts = Alert::fromJSON(
-                    (string)$request->getBody(),
-                    $this->defaultExpiryDuration
-                );
-            } catch (\Throwable $e) {
+            if ($request->getMethod() === 'POST') {
+                // build Alerts from request body
+
+                try {
+                    $alerts = Alert::fromJSON(
+                        (string)$request->getBody(),
+                        $this->defaultExpiryDuration
+                    );
+                } catch (\Throwable $e) {
+                    return new HttpResponse(
+                        400,
+                        ['Content-Type' => 'application/json'],
+                        \json_encode(['status' => 'error'])
+                    );
+                }
+
+                // queue alerts
+                foreach ($alerts as $alert) {
+                    $this->emit('alert', [$alert]);
+                    $this->queue->enqueue($alert);
+                }
+
+                // return positivity
                 return new HttpResponse(
-                    400,
+                    201,
+                    ['Content-Type' => 'application/json'],
+                    \json_encode(['status' => 'success'])
+                );
+            } else if ($request->getMethod() === 'GET') {
+                // get queued alerts
+
+                $alertArray = [];
+                foreach ($this->queue as $alert) {
+                    $alertArray[] = $alert->toArray();
+                }
+                return new HttpResponse(
+                    200,
+                    ['Content-Type' => 'application/json'],
+                    \json_encode([
+                        'status' => 'success',
+                        'alerts' => $alertArray
+                    ])
+                );
+            } else {
+                return new HttpResponse(
+                    405,
                     ['Content-Type' => 'application/json'],
                     \json_encode(['status' => 'error'])
                 );
             }
-
-            // queue alerts
-            foreach ($alerts as $alert) {
-                $this->emit('alert', [$alert]);
-                $this->queue->enqueue($alert);
-            }
-
-            // return positivity
-            return new HttpResponse(
-                201,
-                ['Content-Type' => 'application/json'],
-                \json_encode(['status' => 'success'])
-            );
         }, function (\Exception $e) { // error during authorization
             return new HttpResponse(
                 500,
