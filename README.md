@@ -55,14 +55,13 @@ auto-resolve, or you can submit the alert with status set to `RECOVERED` to expi
 use SeanKndy\AlertManager\Server;
 use SeanKndy\AlertManager\Routing\Route;
 use SeanKndy\AlertManager\Routing\Router;
-use SeanKndy\AlertManager\Receivers\Group;
 use SeanKndy\AlertManager\Receivers\Email;
 
 $loop = \React\EventLoop\Factory::create();
 
 $smtpConfig = [
     'server' => 'localhost',
-    'port' => 25',
+    'port' => 25,
     'active_from' => 'down@someserver.com', // from address when alert is ACTIVE
     'recovery_from' => 'recovered@someserver.com' // from address when alert is RECOVERED
 ];
@@ -77,8 +76,7 @@ $levi = new Email($loop, 'levi@somecompany.com', $smtpConfig);
 // or even NULL to essentially discard alerts.  This means you can route
 // to receivers or even other Routers.
 //
-$router = new Router();
-$router->addRoutes([
+$router = (new Router())->addRoutes([
     Route::toDestination($levi)->where('tag', 'servers'),
     Route::toDestination($sean)->where('tag', 'routers'),
     Route::toDestination($colin)->where('tag', 'wireless'),
@@ -107,7 +105,7 @@ $levi = new Email($loop, 'levi@somecompany.com', $smtpConfig);
 $networkGroup = new Group([$sean, $rob]);
 $serverGroup = new Group([$colin, $levi]);
 
-$router->addRoutes([
+$router = (new Router())->addRoutes([
     Route::toDestination($serverGroup)->where('tag', 'servers'),
     Route::toDestination($networkGroup)->where('tag', ['routers','switching'])
 ]);
