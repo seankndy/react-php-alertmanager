@@ -8,9 +8,10 @@ class Alert
 {
     const ACTIVE = 'ACTIVE';
     const RECOVERED = 'RECOVERED';
+    const ACKNOWLEDGED = 'ACKNOWLEDGED';
 
     /**
-     * State: either ACTIVE, RECOVERED
+     * State: either ACTIVE, RECOVERED or ACKNOWLEDGED
      * @var int
      */
     protected $state;
@@ -151,7 +152,7 @@ class Alert
      */
     public function setState(string $state)
     {
-        if (!\in_array($state, [self::ACTIVE, self::RECOVERED])) {
+        if (!\in_array($state, [self::ACTIVE, self::RECOVERED, self::ACKNOWLEDGED])) {
             throw new \InvalidArgumentException("Invalid state given: $state");
         }
         $this->state = $state;
@@ -252,6 +253,16 @@ class Alert
     public function isRecovered()
     {
         return $this->state === self::RECOVERED;
+    }
+
+    /**
+     * Helper to determine if state == ACKNOWLEDGED
+     *
+     * @return bool
+     */
+    public function isAcknowledged()
+    {
+        return $this->state === self::ACKNOWLEDGED;
     }
 
     /**

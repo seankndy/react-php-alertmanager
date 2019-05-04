@@ -14,7 +14,8 @@ abstract class AbstractReceiver implements ReceivableInterface
      */
     protected $schedules = null;
     /**
-     * How many seconds after initial notify to continually re-notify.
+     * How many seconds after initial notify to continually re-notify
+     * (if state != ACKNOWLEDGED)
      * @var int
      */
     protected $repeatInterval = 86400;
@@ -80,6 +81,11 @@ abstract class AbstractReceiver implements ReceivableInterface
             return $this->receiveRecoveries &&
                 isset($dispatchLog[Alert::ACTIVE])
                 && !isset($dispatchLog[Alert::RECOVERED]);
+        }
+
+        // don't send active alerts if the alert state is ACKNOWLEDGED
+        if ($alert->isAcknowledged()) {
+            return false;
         }
 
         // only allow alert if delay time has elapsed since alert creation
