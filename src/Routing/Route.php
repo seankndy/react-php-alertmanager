@@ -21,7 +21,7 @@ class Route implements RoutableInterface
     }
 
     /**
-     * Create Route for destination $receiver
+     * Create Route with destination $destination
      *
      * @return Route
      */
@@ -80,7 +80,7 @@ class Route implements RoutableInterface
     }
 
     /**
-     * Get the value of Destination
+     * Get the destination
      *
      * @return RoutableInterface|null
      */
@@ -92,7 +92,7 @@ class Route implements RoutableInterface
     /**
      * Set the value of Destination
      *
-     * @param RoutableInterface destination
+     * @param RoutableInterface $destination
      *
      * @return self
      */
@@ -114,9 +114,9 @@ class Route implements RoutableInterface
     }
 
     /**
-     * Set the value of Criteria
+     * Set the value of criteria
      *
-     * @param Criteria criteria
+     * @param Criteria $criteria
      *
      * @return self
      */

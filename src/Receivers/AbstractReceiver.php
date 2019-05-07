@@ -5,7 +5,11 @@ use SeanKndy\AlertManager\Alerts\Alert;
 use SeanKndy\AlertManager\Scheduling\ScheduleInterface;
 use React\Promise\PromiseInterface;
 use Ramsey\Uuid\Uuid;
-
+/**
+ * Provides a base set of Receiver functions such as scheduling, repeat intervals,
+ * alert delays and filtering.
+ *
+ */
 abstract class AbstractReceiver implements ReceivableInterface
 {
     /**
@@ -61,13 +65,9 @@ abstract class AbstractReceiver implements ReceivableInterface
     }
 
     /**
-     * Determine if this Receiver is ready/capable of receiving for Alert $alert
-     *
-     * @param Alert $alert
-     *
-     * @return bool
+     * {@inheritDoc}
      */
-    public function isReceivable(Alert $alert)
+    public function isReceivable(Alert $alert) : bool
     {
         // never receive alerts if off schedule
         if (!$this->isActivelyScheduled()) {
@@ -112,6 +112,14 @@ abstract class AbstractReceiver implements ReceivableInterface
             return true;
         }
         return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function receiverId()
+    {
+        return $this->id;
     }
 
     /**

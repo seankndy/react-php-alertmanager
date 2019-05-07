@@ -2,17 +2,17 @@
 namespace SeanKndy\AlertManager\Receivers;
 
 use SeanKndy\AlertManager\Alerts\Alert;
-use SeanKndy\AlertManager\Routing\RoutableInterface;
 use React\Promise\PromiseInterface;
 
 abstract class ReceiverDecorator implements ReceivableInterface
 {
     /**
-     * @var AbstractReceiver
+     * Receiver we are decorating.
+     * @var ReceivableInterface
      */
     protected $receiver;
 
-    public function __construct(AbstractReceiver $receiver)
+    public function __construct(ReceivableInterface $receiver)
     {
         $this->receiver = $receiver;
     }
@@ -20,9 +20,25 @@ abstract class ReceiverDecorator implements ReceivableInterface
     /**
      * {@inheritDoc}
      */
+    public function isReceivable(Alert $alert) : bool
+    {
+        return $this->receiver->isReceivable($alert);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function receiverId()
+    {
+        return $this->receiver->receiverId();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function route(Alert $alert) : ?PromiseInterface
     {
-        if ($this->receiver->isReceivable($alert)) {
+        if ($this->isReceivable($alert)) {
             return $this->receive($alert);
         }
         return null;
@@ -31,7 +47,7 @@ abstract class ReceiverDecorator implements ReceivableInterface
     /**
      * Get the value of Receiver
      *
-     * @return AbstractReceiver
+     * @return ReceivableInterface
      */
     public function getReceiver()
     {
@@ -41,11 +57,11 @@ abstract class ReceiverDecorator implements ReceivableInterface
     /**
      * Set the value of Receiver
      *
-     * @param AbstractReceiver receiver
+     * @param ReceivableInterface $receiver
      *
      * @return self
      */
-    public function setReceiver(AbstractReceiver $receiver)
+    public function setReceiver(ReceivableInterface $receiver)
     {
         $this->receiver = $receiver;
 
