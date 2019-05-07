@@ -48,6 +48,8 @@ abstract class AbstractReceiver implements ReceivableInterface
     {
         if ($id === null) {
             $this->id = Uuid::uuid4()->toString();
+        } else {
+            $this->id = $id;
         }
         $this->schedules = new \SplObjectStorage();
         $this->filters = new \SplObjectStorage();
