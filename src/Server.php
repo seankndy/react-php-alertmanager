@@ -55,7 +55,7 @@ class Server extends EventEmitter
         $socket = new SocketServer($listen, $this->loop);
         $this->httpServer->listen($socket);
 
-        $alertsApi = new \Api\V1\Alerts($queue);
+        $alertsApi = new Api\V1\Alerts($queue);
         $alertsApi->on('alert', function ($alert) { // fwd alert
             $this->emit('alert', [$alert]);
         });
