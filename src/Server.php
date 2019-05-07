@@ -56,9 +56,9 @@ class Server extends EventEmitter
         $this->httpServer->listen($socket);
 
         $alertsApi = new \Api\V1\Alerts($queue);
-        $this->httpDispatcher = FastRoute\simpleDispatcher(
-            function(FastRoute\RouteCollector $r) use ($alertsApi) {
-                $r->addGroup('/api/v1', function (FastRoute\RouteCollector $r) {
+        $this->httpDispatcher = \FastRoute\simpleDispatcher(
+            function(\FastRoute\RouteCollector $r) use ($alertsApi) {
+                $r->addGroup('/api/v1', function (\FastRoute\RouteCollector $r) {
                     $r->addRoute('GET', '/alerts', [$alertsApi, 'get']);
                     $r->addRoute('POST', '/alerts', [$alertsApi, 'create']);
                 });
