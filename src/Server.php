@@ -12,6 +12,7 @@ use React\Http\Server as HttpServer;
 use React\Socket\Server as SocketServer;
 use Evenement\EventEmitter;
 
+
 class Server extends EventEmitter
 {
     /**
@@ -31,14 +32,14 @@ class Server extends EventEmitter
      */
     private $router;
     /**
-     * @var int
-     */
-    private $defaultExpiryDuration = 600; // 10min
-    /**
      * Used to verify user access to API
      * @var AuthorizerInterface
      */
     private $authorizer = null;
+    /**
+     * @var \FastRoute\Dispatcher
+     */
+    private $httpDispatcher;
 
     public function __construct(string $listen, LoopInterface $loop,
         RoutableInterface $router, AuthorizerInterface $authorizer = null)
@@ -54,6 +55,16 @@ class Server extends EventEmitter
         $socket = new SocketServer($listen, $this->loop);
         $this->httpServer->listen($socket);
 
+        $alertsApi = new \Api\V1\Alerts($queue);
+        $this->httpDispatcher = FastRoute\simpleDispatcher(
+            function(FastRoute\RouteCollector $r) use ($alertsApi) {
+                $r->addGroup('/api/v1', function (FastRoute\RouteCollector $r) {
+                    $r->addRoute('GET', '/alerts', [$alertsApi, 'get']);
+                    $r->addRoute('POST', '/alerts', [$alertsApi, 'create']);
+                });
+            }
+        );
+
         $this->loop->futureTick(function() {
             $this->processQueue();
         });
@@ -61,88 +72,46 @@ class Server extends EventEmitter
 
     private function handleRequest(ServerRequestInterface $request)
     {
-        // while we don't have any sort of complex api parsing, versioning and
-        // routing at this time, i am still going to enforce callers use a path
-        // so future non-breakable changes to the API can be made.
-        if ($request->getUri()->getPath() != '/api/v1/alerts') {
-            return new HttpResponse(
-                404,
-                ['Content-Type' => 'application/json'],
-                \json_encode(['status' => 'error'])
-            );
-        }
+        $routeInfo = $this->httpDispatcher->dispatch(
+            $request->getMethod(), $request->getUri()->getPath()
+        );
 
-        if ($this->authorizer) {
-            $authPromise = $this->authorizer->authorize($request);
-        } else {
-            $authPromise = \React\Promise\resolve(true);
-        }
-        return $authPromise->then(function (bool $authenticated) use ($request) {
-            if (!$authenticated) {
+        switch ($routeInfo[0]) {
+            case FastRoute\Dispatcher::NOT_FOUND:
                 return new HttpResponse(
-                    401,
+                    404,
                     ['Content-Type' => 'application/json'],
                     \json_encode(['status' => 'error'])
                 );
-            }
-
-            if ($request->getMethod() === 'POST') {
-                // build Alerts from request body
-
-                try {
-                    $alerts = Alert::fromJSON(
-                        (string)$request->getBody(),
-                        $this->defaultExpiryDuration
-                    );
-                } catch (\Throwable $e) {
-                    return new HttpResponse(
-                        400,
-                        ['Content-Type' => 'application/json'],
-                        \json_encode(['status' => 'error'])
-                    );
-                }
-
-                // queue alerts
-                foreach ($alerts as $alert) {
-                    $this->emit('alert', [$alert]);
-                    $this->queue->enqueue($alert);
-                }
-
-                // return positivity
-                return new HttpResponse(
-                    201,
-                    ['Content-Type' => 'application/json'],
-                    \json_encode(['status' => 'success'])
-                );
-            } else if ($request->getMethod() === 'GET') {
-                // get queued alerts
-
-                $alertArray = [];
-                foreach ($this->queue as $alert) {
-                    $alertArray[] = $alert->toArray();
-                }
-                return new HttpResponse(
-                    200,
-                    ['Content-Type' => 'application/json'],
-                    \json_encode([
-                        'status' => 'success',
-                        'alerts' => $alertArray
-                    ])
-                );
-            } else {
+            case FastRoute\Dispatcher::METHOD_NOT_ALLOWED:
                 return new HttpResponse(
                     405,
                     ['Content-Type' => 'application/json'],
                     \json_encode(['status' => 'error'])
                 );
-            }
-        }, function (\Exception $e) { // error during authorization
-            return new HttpResponse(
-                500,
-                ['Content-Type' => 'application/json'],
-                \json_encode(['status' => 'error'])
-            );
-        });
+            case FastRoute\Dispatcher::FOUND:
+                if ($this->authorizer) {
+                    $authPromise = $this->authorizer->authorize($request);
+                } else {
+                    $authPromise = \React\Promise\resolve(true);
+                }
+                return $authPromise->then(function (bool $authenticated) use ($request) {
+                    if (!$authenticated) {
+                        return new HttpResponse(
+                            401,
+                            ['Content-Type' => 'application/json'],
+                            \json_encode(['status' => 'error'])
+                        );
+                    }
+                    \call_user_func_array($routeInfo[1], $request);
+                }, function (\Exception $e) { // error during authorization
+                    return new HttpResponse(
+                        500,
+                        ['Content-Type' => 'application/json'],
+                        \json_encode(['status' => 'error'])
+                    );
+                });
+        }
     }
 
     private function processQueue()
@@ -176,13 +145,6 @@ class Server extends EventEmitter
                 $this->processQueue();
             });
         });
-    }
-
-    public function setDefaultExpiryDuration(int $duration)
-    {
-        $this->defaultExpiryDuration = $duration;
-
-        return $this;
     }
 
     public function setAuthorizer(AuthorizerInterface $authorizer)

@@ -1,12 +1,18 @@
 <?php
 namespace SeanKndy\AlertManager\Receivers;
 
-use React\Promise\PromiseInterface;
 use SeanKndy\AlertManager\Alerts\Alert;
 use SeanKndy\AlertManager\Scheduling\ScheduleInterface;
+use React\Promise\PromiseInterface;
+use Ramsey\Uuid\Uuid;
 
 abstract class AbstractReceiver implements ReceivableInterface
 {
+    /**
+     * Identifier for the receiver
+     * @var mixed
+     */
+    protected $id;
     /**
      * ScheduleInterface determining when the receiver is active
      * An empty schedule means always on-call/active
@@ -34,8 +40,11 @@ abstract class AbstractReceiver implements ReceivableInterface
      */
     protected $filters = null;
 
-    public function __construct()
+    public function __construct($id = null)
     {
+        if ($id === null) {
+            $this->id = Uuid::uuid4()->toString();
+        }
         $this->schedules = new \SplObjectStorage();
         $this->filters = new \SplObjectStorage();
     }
@@ -103,6 +112,30 @@ abstract class AbstractReceiver implements ReceivableInterface
             return true;
         }
         return false;
+    }
+
+    /**
+     * Get the value of ID
+     *
+     * @return mixed
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
+     * Set the value of ID
+     *
+     * @param mixed $id
+     *
+     * @return self
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
+
+        return $this;
     }
 
     /**
@@ -303,10 +336,11 @@ abstract class AbstractReceiver implements ReceivableInterface
      */
     public function __toString()
     {
-        return 'num-schedules=' . \count($this->schedules) . '; ' .
+        return 'id=' . $this->id . '; num-schedules=' . \count($this->schedules) . '; ' .
             'receive-recoveries=' . ($this->receiveRecoveries ? 'TRUE' : 'FALSE') . '; ' .
             'repeat-interval=' . $this->repeatInterval . 'sec; ' .
             'alert-delay=' . $this->alertDelay . 'sec; ' .
             'num-filters=' . \count($this->filters);
     }
+
 }

@@ -23,9 +23,10 @@ class Email extends AbstractReceiver
      */
     protected $config;
 
-    public function __construct(LoopInterface $loop, string $emailAddress, array $config)
+    public function __construct(mixed $id, LoopInterface $loop,
+        string $emailAddress, array $config)
     {
-        parent::__construct();
+        parent::__construct($id);
 
         $this->loop = $loop;
         $this->emailAddress = $emailAddress;
