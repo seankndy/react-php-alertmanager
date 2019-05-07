@@ -47,7 +47,7 @@ class Alerts extends EventEmitter
         foreach ($this->queue as $alert) {
             if ($receiverId !== null) {
                 foreach ($alert->getDispatchLog() as $receiver) {
-                    if ($receiver->getId() == $receiverId) {
+                    if ($receiver->receiverId() == $receiverId) {
                         $alertArray[] = $alert->toArray();
                         break;
                     }
