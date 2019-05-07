@@ -7,26 +7,21 @@ use Psr\Http\Message\ServerRequestInterface;
 use Evenement\EventEmitter;
 use React\Http\Response as HttpResponse;
 
-class Alerts
+class Alerts extends EventEmitter
 {
     /**
      * @var Queue
      */
     protected $queue;
     /**
-     * @var EventEmitter
-     */
-    protected $eventEmitter = null;
-    /**
      * @var int
      */
     private $defaultExpiryDuration = 600; // 10min
 
 
-    public function __construct(Queue $queue, EventEmitter $eventEmitter = null)
+    public function __construct(Queue $queue)
     {
         $this->queue = $queue;
-        $this->eventEmitter = $eventEmitter;
     }
 
     public function setDefaultExpiryDuration(int $duration)
@@ -96,8 +91,7 @@ class Alerts
 
         // queue alerts
         foreach ($alerts as $alert) {
-            if ($this->eventEmitter)
-                $this->eventEmitter->emit('alert', [$alert]);
+            $this->emit('alert', [$alert]);
             $this->queue->enqueue($alert);
         }
 
