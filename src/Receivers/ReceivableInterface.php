@@ -15,4 +15,11 @@ interface ReceivableInterface extends RoutableInterface
      * @return PromiseInterface
      */
     public function receive(Alert $alert) : PromiseInterface;
+
+    /**
+     * Return a unique identifier for the receiver
+     *
+     * @return mixed
+     */
+    public function getId();
 }
