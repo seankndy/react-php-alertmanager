@@ -61,7 +61,7 @@ class Server extends EventEmitter
         });
         $this->httpDispatcher = \FastRoute\simpleDispatcher(
             function(\FastRoute\RouteCollector $r) use ($alertsApi) {
-                $r->addGroup('/api/v1', function (\FastRoute\RouteCollector $r) {
+                $r->addGroup('/api/v1', function (\FastRoute\RouteCollector $r) use ($alertsApi) {
                     $r->addRoute('GET', '/alerts', [$alertsApi, 'get']);
                     $r->addRoute('POST', '/alerts', [$alertsApi, 'create']);
                 });
