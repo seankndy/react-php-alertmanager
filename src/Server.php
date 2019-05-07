@@ -80,25 +80,25 @@ class Server extends EventEmitter
         );
 
         switch ($routeInfo[0]) {
-            case FastRoute\Dispatcher::NOT_FOUND:
+            case \FastRoute\Dispatcher::NOT_FOUND:
                 return new HttpResponse(
                     404,
                     ['Content-Type' => 'application/json'],
                     \json_encode(['status' => 'error'])
                 );
-            case FastRoute\Dispatcher::METHOD_NOT_ALLOWED:
+            case \FastRoute\Dispatcher::METHOD_NOT_ALLOWED:
                 return new HttpResponse(
                     405,
                     ['Content-Type' => 'application/json'],
                     \json_encode(['status' => 'error'])
                 );
-            case FastRoute\Dispatcher::FOUND:
+            case \FastRoute\Dispatcher::FOUND:
                 if ($this->authorizer) {
                     $authPromise = $this->authorizer->authorize($request);
                 } else {
                     $authPromise = \React\Promise\resolve(true);
                 }
-                return $authPromise->then(function (bool $authenticated) use ($request) {
+                return $authPromise->then(function (bool $authenticated) use ($request, $routeInfo) {
                     if (!$authenticated) {
                         return new HttpResponse(
                             401,
@@ -106,7 +106,7 @@ class Server extends EventEmitter
                             \json_encode(['status' => 'error'])
                         );
                     }
-                    \call_user_func_array($routeInfo[1], $request);
+                    return \call_user_func_array($routeInfo[1], [$request]);
                 }, function (\Exception $e) { // error during authorization
                     return new HttpResponse(
                         500,
