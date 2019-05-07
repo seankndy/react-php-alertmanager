@@ -40,7 +40,8 @@ class Alerts extends EventEmitter
      */
     public function get(ServerRequestInterface $request)
     {
-        $receiverId = $request->getAttribute('receiverId');
+        $queryParams = $request->getQueryParams();
+        $receiverId = $queryParams['receiverId'] ?? null;
 
         $alertArray = [];
         foreach ($this->queue as $alert) {
