@@ -114,11 +114,18 @@ class Alerts extends EventEmitter
      */
     public function quiesce(ServerRequestInterface $request, int $duration)
     {
-        $this->server->startQuiesce($duration);
-        return new HttpResponse(
-            201,
-            ['Content-Type' => 'application/json'],
-            \json_encode(['status' => 'success'])
-        );
+        if ($this->server->startQuiesce($duration)) {
+            return new HttpResponse(
+                201,
+                ['Content-Type' => 'application/json'],
+                \json_encode(['status' => 'success'])
+            );
+        } else {
+            return new HttpResponse(
+                429,
+                ['Content-Type' => 'application/json'],
+                \json_encode(['status' => 'error'])
+            );
+        }
     }
 }

@@ -187,10 +187,14 @@ class Server extends EventEmitter
      *
      * @param int $duration
      *
-     * @return self
+     * @return bool
      */
     public function startQuiesce(int $duration)
     {
+        if ($this->quiesce) {
+            return false;
+        }
+
         $this->quiesce = true;
         $this->emit('quiesce.start', [$duration]);
 
@@ -199,7 +203,7 @@ class Server extends EventEmitter
             $this->quiesce = false;
         });
 
-        return $this;
+        return true;
     }
 
     /**
