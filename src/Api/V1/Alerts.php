@@ -42,10 +42,17 @@ class Alerts extends EventEmitter
     {
         $queryParams = $request->getQueryParams();
         $receiverId = $queryParams['receiverId'] ?? null;
+        $status = $queryParams['status'] ?? null;
 
         $alertArray = [];
         foreach ($this->server->getQueue() as $alert) {
+            // filter by status
+            if ($status && $status != $alert->getStatus()) {
+                continue;
+            }
             if ($receiverId !== null) {
+                // filter by whether receiver with id $receiverId has been
+                // dispatched to.
                 foreach ($alert->getDispatchLog() as $receiver) {
                     if ($receiver->receiverId() == $receiverId) {
                         $alertArray[] = $alert->toArray();
