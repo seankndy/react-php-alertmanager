@@ -113,7 +113,7 @@ class Alerts extends EventEmitter
      */
     public function quiesce(ServerRequestInterface $request)
     {
-        $parsedBody = $request->getParsedBody();
+        $parsedBody = \json_decode((string)$request->getBody());
         $duration = $parsedBody->duration ?? null;
         if (!$duration) {
             return new HttpResponse(
