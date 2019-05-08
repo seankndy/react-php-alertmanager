@@ -45,7 +45,7 @@ class Throttler extends ReceiverDecorator
     /**
      * A receiver to send a special notification (ThrottledReceiverAlert) to
      * notify that the original receiver has been throttled.
-     * @var AbstractReceiver
+     * @var ReceivableInterface
      */
     protected $onHoldDownReceiver = null;
 
@@ -80,7 +80,7 @@ class Throttler extends ReceiverDecorator
         if ($this->hitCount >= $this->hitThreshold) {
             $this->holdDownStartTime = \time();
             if ($this->onHoldDownReceiver) {
-                $this->onHoldDownReceiver->route(new ThrottledReceiverAlert(
+                $this->onHoldDownReceiver->receive(new ThrottledReceiverAlert(
                     $this->holdDownStartTime+$this->holdDown
                 ));
             }
@@ -168,9 +168,9 @@ class Throttler extends ReceiverDecorator
     /**
      * Get value of onHoldDownReceiver
      *
-     * @return AbstractReceiver|null
+     * @return ReceivableInterface|null
      */
-    public function getOnHoldDownReceiver(AbstractReceiver $receiver)
+    public function getOnHoldDownReceiver(ReceivableInterface $receiver)
     {
         return $this->onHoldDownReceiver;
     }
@@ -178,11 +178,11 @@ class Throttler extends ReceiverDecorator
     /**
      * Set value of onHoldDownReceiver
      *
-     * @param AbstractReceiver $receiver
+     * @param ReceivableInterface $receiver
      *
      * @return self
      */
-    public function setOnHoldDownReceiver(AbstractReceiver $receiver)
+    public function setOnHoldDownReceiver(ReceivableInterface $receiver)
     {
         $this->onHoldDownReceiver = $receiver;
 

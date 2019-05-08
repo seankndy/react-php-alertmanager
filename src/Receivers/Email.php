@@ -54,7 +54,7 @@ class Email extends AbstractReceiver
             $env['from'] = $this->config['active_from'];
             $env['to'] = $this->emailAddress;
             $env['subject'] = '';
-            $env['message'] = 'Alerts to this receiver has been throttled until ' .
+            $env['message'] = 'Alerts to this receiver have been throttled until ' .
                 \date(DATE_ATOM, $alert->getAttributes()['expiresAt']) . '.';
         } else {
             $env = $this->config;
