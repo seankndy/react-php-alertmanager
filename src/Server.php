@@ -195,7 +195,7 @@ class Server extends EventEmitter
 
         $this->loop->addTimer($duration, function() {
             $this->quiesce = false;
-        })
+        });
 
         return $this;
     }
