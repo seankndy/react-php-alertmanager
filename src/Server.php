@@ -40,6 +40,14 @@ class Server extends EventEmitter
      * @var \FastRoute\Dispatcher
      */
     private $httpDispatcher;
+    /**
+     * @var int
+     */
+    private $quiesceStartTime = 0;
+    /**
+     * @var int
+     */
+    private $quiesceDuration = 0;
 
     public function __construct(string $listen, LoopInterface $loop,
         RoutableInterface $router, AuthorizerInterface $authorizer = null)
@@ -55,7 +63,7 @@ class Server extends EventEmitter
         $socket = new SocketServer($listen, $this->loop);
         $this->httpServer->listen($socket);
 
-        $alertsApi = new Api\V1\Alerts($this->queue);
+        $alertsApi = new Api\V1\Alerts($this);
         $alertsApi->on('alert', function ($alert) { // fwd alert
             $this->emit('alert', [$alert]);
         });
@@ -64,6 +72,7 @@ class Server extends EventEmitter
                 $r->addGroup('/api/v1', function (\FastRoute\RouteCollector $r) use ($alertsApi) {
                     $r->addRoute('GET', '/alerts', [$alertsApi, 'get']);
                     $r->addRoute('POST', '/alerts', [$alertsApi, 'create']);
+                    $r->addRoute('POST', '/alerts/quiesce/{duration:\d+}', [$alertsApi, 'quiesce']);
                 });
             }
         );
@@ -73,6 +82,13 @@ class Server extends EventEmitter
         });
     }
 
+    /**
+     * Handle incoming http request.
+     *
+     * @param ServerRequestInterface $request The incoming request
+     *
+     * @return HttpResponse
+     */
     private function handleRequest(ServerRequestInterface $request)
     {
         $routeInfo = $this->httpDispatcher->dispatch(
@@ -106,7 +122,8 @@ class Server extends EventEmitter
                             \json_encode(['status' => 'error'])
                         );
                     }
-                    return \call_user_func_array($routeInfo[1], [$request]);
+                    $vars = \array_merge([$request], $routeInfo[2]);
+                    return \call_user_func_array($routeInfo[1], $vars);
                 }, function (\Exception $e) { // error during authorization
                     return new HttpResponse(
                         500,
@@ -117,6 +134,11 @@ class Server extends EventEmitter
         }
     }
 
+    /**
+     * Process $this->queue() ; route alerts/delete expired alerts
+     *
+     * @return void
+     */
     private function processQueue()
     {
         $this->queue->settle();
@@ -150,10 +172,42 @@ class Server extends EventEmitter
         });
     }
 
+    /**
+     * Set AuthorizerInterface
+     *
+     * @param AuthorizerInterface $authorizer
+     *
+     * @return self
+     */
     public function setAuthorizer(AuthorizerInterface $authorizer)
     {
         $this->authorizer = $authorizer;
 
         return $this;
+    }
+
+    /**
+     * Quiet the server from routing any alerts for $duration seconds
+     *
+     * @param int $duration
+     *
+     * @return self
+     */
+    public function startQuiesce(int $duration)
+    {
+        $this->quiesceStartTime = \time();
+        $this->quiesceDuration = $duration;
+
+        return $this;
+    }
+
+    /**
+     * Get the queue
+     *
+     * @return Queue
+     */
+    public function getQueue()
+    {
+        return $this->queue;
     }
 }

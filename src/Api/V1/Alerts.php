@@ -2,7 +2,7 @@
 namespace SeanKndy\AlertManager\Api\V1;
 
 use SeanKndy\AlertManager\Alerts\Alert;
-use SeanKndy\AlertManager\Alerts\Queue;
+use SeanKndy\AlertManager\Server;
 use Psr\Http\Message\ServerRequestInterface;
 use Evenement\EventEmitter;
 use React\Http\Response as HttpResponse;
@@ -10,18 +10,18 @@ use React\Http\Response as HttpResponse;
 class Alerts extends EventEmitter
 {
     /**
-     * @var Queue
+     * @var Server
      */
-    protected $queue;
+    protected $server;
     /**
      * @var int
      */
     private $defaultExpiryDuration = 600; // 10min
 
 
-    public function __construct(Queue $queue)
+    public function __construct(Server $server)
     {
-        $this->queue = $queue;
+        $this->server = $server;
     }
 
     public function setDefaultExpiryDuration(int $duration)
@@ -44,7 +44,7 @@ class Alerts extends EventEmitter
         $receiverId = $queryParams['receiverId'] ?? null;
 
         $alertArray = [];
-        foreach ($this->queue as $alert) {
+        foreach ($this->server->getQueue() as $alert) {
             if ($receiverId !== null) {
                 foreach ($alert->getDispatchLog() as $receiver) {
                     if ($receiver->receiverId() == $receiverId) {
@@ -93,10 +93,28 @@ class Alerts extends EventEmitter
         // queue alerts
         foreach ($alerts as $alert) {
             $this->emit('alert', [$alert]);
-            $this->queue->enqueue($alert);
+            $this->server->getQueue()->enqueue($alert);
         }
 
         // return positivity
+        return new HttpResponse(
+            201,
+            ['Content-Type' => 'application/json'],
+            \json_encode(['status' => 'success'])
+        );
+    }
+
+    /**
+     * Quiet alert routing
+     *
+     * @param ServerRequestInterface $request
+     * @param int $duration Duration to quiesce
+     *
+     * @return HttpResponse
+     */
+    public function quiesce(ServerRequestInterface $request, int $duration)
+    {
+        $this->server->startQuiesce($duration);
         return new HttpResponse(
             201,
             ['Content-Type' => 'application/json'],
