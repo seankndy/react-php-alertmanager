@@ -192,8 +192,10 @@ class Server extends EventEmitter
     public function startQuiesce(int $duration)
     {
         $this->quiesce = true;
+        $this->emit('quiesce.start', [$duration]);
 
         $this->loop->addTimer($duration, function() {
+            $this->emit('quiesce.end', []);
             $this->quiesce = false;
         });
 
