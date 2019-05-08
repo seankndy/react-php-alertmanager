@@ -41,13 +41,9 @@ class Server extends EventEmitter
      */
     private $httpDispatcher;
     /**
-     * @var int
+     * @var bool
      */
-    private $quiesceStartTime = 0;
-    /**
-     * @var int
-     */
-    private $quiesceDuration = 0;
+    private $quiesce = false;
 
     public function __construct(string $listen, LoopInterface $loop,
         RoutableInterface $router, AuthorizerInterface $authorizer = null)
@@ -150,7 +146,7 @@ class Server extends EventEmitter
                 $alert->setState(Alert::RECOVERED);
                 $this->emit('alert.expired', [$alert]);
             }
-            if ($promise = $this->router->route($alert)) {
+            if (!$this->quiesce && $promise = $this->router->route($alert)) {
                 $promises[] = $promise;
             }
         }
@@ -195,8 +191,11 @@ class Server extends EventEmitter
      */
     public function startQuiesce(int $duration)
     {
-        $this->quiesceStartTime = \time();
-        $this->quiesceDuration = $duration;
+        $this->quiesce = true;
+
+        $this->loop->addTimer($duration, function() {
+            $this->quiesce = false;
+        })
 
         return $this;
     }
