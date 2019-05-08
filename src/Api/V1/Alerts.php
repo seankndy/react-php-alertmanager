@@ -42,7 +42,7 @@ class Alerts extends EventEmitter
     {
         $queryParams = $request->getQueryParams();
         $receiverId = $queryParams['receiverId'] ?? null;
-        $statue= $queryParams['state'] ?? null;
+        $state = $queryParams['state'] ?? null;
 
         $alertArray = [];
         foreach ($this->server->getQueue() as $alert) {
