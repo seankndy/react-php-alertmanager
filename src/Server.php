@@ -68,7 +68,7 @@ class Server extends EventEmitter
                 $r->addGroup('/api/v1', function (\FastRoute\RouteCollector $r) use ($alertsApi) {
                     $r->addRoute('GET', '/alerts', [$alertsApi, 'get']);
                     $r->addRoute('POST', '/alerts', [$alertsApi, 'create']);
-                    $r->addRoute('POST', '/alerts/quiesce/{duration:\d+}', [$alertsApi, 'quiesce']);
+                    $r->addRoute('POST', '/alerts/quiesce', [$alertsApi, 'quiesce']);
                 });
             }
         );

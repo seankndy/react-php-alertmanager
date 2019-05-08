@@ -108,12 +108,21 @@ class Alerts extends EventEmitter
      * Quiet alert routing
      *
      * @param ServerRequestInterface $request
-     * @param int $duration Duration to quiesce
      *
      * @return HttpResponse
      */
-    public function quiesce(ServerRequestInterface $request, int $duration)
+    public function quiesce(ServerRequestInterface $request)
     {
+        $queryParams = $request->getQueryParams();
+        $duration = $queryParams['duration'] ?? null;
+        if (!$duration) {
+            return new HttpResponse(
+                400,
+                ['Content-Type' => 'application/json'],
+                \json_encode(['status' => 'error'])
+            );
+        }
+
         if ($this->server->startQuiesce($duration)) {
             return new HttpResponse(
                 201,
