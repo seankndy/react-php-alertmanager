@@ -313,13 +313,23 @@ class Alert
      */
     public function toArray()
     {
+        $dispatchedTo = [];
+        foreach ($this->dispatchLog as $receiver) {
+            if ($this->dispatchLog[$receiver][$this->getState()]) {
+                $dispatchedTo[] = [
+                    'receiverId' => $receiver->receiverId(),
+                    'time' => $this->dispatchLog[$receiver][$this->getState()]
+                ];
+            }
+        }
         return [
             'name' => $this->name,
             'expiryDuration' => $this->expiryDuration,
             'state' => $this->state,
             'createdAt' => $this->createdAt,
             'updatedAt' => $this->updatedAt,
-            'attributes' => $this->attributes
+            'attributes' => $this->attributes,
+            'dispatchedTo' => $dispatchedTo
         ];
     }
 
