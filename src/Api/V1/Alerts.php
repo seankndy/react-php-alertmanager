@@ -113,8 +113,8 @@ class Alerts extends EventEmitter
      */
     public function quiesce(ServerRequestInterface $request)
     {
-        $queryParams = $request->getQueryParams();
-        $duration = $queryParams['duration'] ?? null;
+        $parsedBody = $request->getParsedBody();
+        $duration = $parsedBody->duration ?? null;
         if (!$duration) {
             return new HttpResponse(
                 400,
