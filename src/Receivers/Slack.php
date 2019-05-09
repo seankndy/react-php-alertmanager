@@ -65,8 +65,7 @@ class Slack extends AbstractReceiver
         return $this->asyncHttpPost(
             'https://slack.com/api/im.open', $params
         )->then(function ($result) use ($msg) {
-            if (!isset($result->ok) || $result->ok != 'true'
-                || !$result->channel->id) {
+            if (!isset($result->ok) || !$result->ok || !$result->channel->id) {
                 throw new \Exception("Failed response from Slack's im.open: " .
                     \json_encode($result));
             }
@@ -80,7 +79,7 @@ class Slack extends AbstractReceiver
             return $this->asyncHttpPost(
                 'https://slack.com/api/chat.postMessage', $params
             )->then(function ($result) {
-                if (!isset($result->ok) || $result->ok != 'true') {
+                if (!isset($result->ok) || !$result->ok) {
                     throw new \Exception("Failed response from Slack's chat.postMessage: " .
                         \json_encode($result));
                 }
