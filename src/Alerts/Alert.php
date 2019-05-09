@@ -7,11 +7,12 @@ use SeanKndy\AlertManager\Receivers\ReceivableInterface;
 class Alert
 {
     const ACTIVE = 'ACTIVE';
+    const INACTIVE = 'INACTIVE'; // aka "deleted"
     const RECOVERED = 'RECOVERED';
     const ACKNOWLEDGED = 'ACKNOWLEDGED';
 
     /**
-     * State: either ACTIVE, RECOVERED or ACKNOWLEDGED
+     * State: either ACTIVE, INACTIVE, RECOVERED or ACKNOWLEDGED
      * @var int
      */
     protected $state;
@@ -152,7 +153,7 @@ class Alert
      */
     public function setState(string $state)
     {
-        if (!\in_array($state, [self::ACTIVE, self::RECOVERED, self::ACKNOWLEDGED])) {
+        if (!\in_array($state, [self::ACTIVE, self::INACTIVE, self::RECOVERED, self::ACKNOWLEDGED])) {
             throw new \InvalidArgumentException("Invalid state given: $state");
         }
         $this->state = $state;
@@ -263,6 +264,16 @@ class Alert
     public function isAcknowledged()
     {
         return $this->state === self::ACKNOWLEDGED;
+    }
+
+    /**
+     * Helper to determine if state == INACTIVE
+     *
+     * @return bool
+     */
+    public function isInactive()
+    {
+        return $this->state === self::INACTIVE;
     }
 
     /**

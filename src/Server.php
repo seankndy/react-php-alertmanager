@@ -141,6 +141,10 @@ class Server extends EventEmitter
 
         $promises = [];
         foreach ($this->queue as $alert) {
+            if ($alert->isInactive()) {
+                continue; // skip inactive alerts, then delete them below.
+            }
+
             if (!$alert->isRecovered() && $alert->hasExpired()) {
                 // expire alert
                 $alert->setState(Alert::RECOVERED);
@@ -154,9 +158,9 @@ class Server extends EventEmitter
         \React\Promise\all($promises)->otherwise(function (\Throwable $e) {
             $this->emit('error', [$e]);
         })->always(function() {
-            // remove recovered alerts
+            // remove recovered or inactive alerts
             foreach ($this->queue as $key => $alert) {
-                if ($alert->isRecovered()) {
+                if ($alert->isInactive() || $alert->isRecovered()) {
                     $this->emit('alert.deleted', [$this->queue[$key]]);
                     unset($this->queue[$key]);
                 }
