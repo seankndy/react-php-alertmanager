@@ -67,7 +67,8 @@ class Slack extends AbstractReceiver
         )->then(function ($result) use ($msg) {
             if (!isset($result->ok) || $result->ok != 'true'
                 || !$result->channel->id) {
-                throw new \Exception("Failed response from Slack's im.open.");
+                throw new \Exception("Failed response from Slack's im.open: " .
+                    \json_encode($result));
             }
 
             $params = [
@@ -80,7 +81,8 @@ class Slack extends AbstractReceiver
                 'https://slack.com/api/chat.postMessage', $params
             )->then(function ($result) {
                 if (!isset($result->ok) || $result->ok != 'true') {
-                    throw new \Exception("Failed response from Slack's chat.postMessage.");
+                    throw new \Exception("Failed response from Slack's chat.postMessage: " .
+                        \json_encode($result));
                 }
             });
         });
