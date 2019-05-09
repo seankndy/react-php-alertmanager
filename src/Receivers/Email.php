@@ -3,6 +3,7 @@ namespace SeanKndy\AlertManager\Receivers;
 
 use SeanKndy\AlertManager\Alerts\Alert;
 use SeanKndy\AlertManager\Alerts\ThrottledReceiverAlert;
+use SeanKndy\AlertManager\Support\Traits\ConfigTrait;
 use React\EventLoop\LoopInterface;
 use React\Promise\PromiseInterface;
 use React\ChildProcess\Process;
@@ -10,6 +11,8 @@ use Shuchkin\ReactSMTP\Client as SmtpClient;
 
 class Email extends AbstractReceiver
 {
+    use ConfigTrait;
+
     /**
      * @var LoopInterface
      */
@@ -18,10 +21,6 @@ class Email extends AbstractReceiver
      * @var string
      */
     protected $emailAddress;
-    /**
-     * @var array
-     */
-    protected $config;
 
     public function __construct($id, LoopInterface $loop,
         string $emailAddress, array $config)
@@ -30,13 +29,15 @@ class Email extends AbstractReceiver
 
         $this->loop = $loop;
         $this->emailAddress = $emailAddress;
+
         $this->config = \array_merge([
             'server' => 'localhost',
             'port' => 25,
             'active_from' => 'no-reply@localhost.localdomain',
             'recovery_from' => 'no-reply@localhost.localdomain',
             'username' => '',
-            'password' => ''
+            'password' => '',
+            'message_template' => ''
         ], $config);
     }
 
@@ -109,26 +110,16 @@ class Email extends AbstractReceiver
         );
     }
 
-    public function setConfigItem($key, $val)
-    {
-        $this->config[$key] = $val;
-
-        return $this;
-    }
-
+    /**
+     * Get the email address
+     *
+     * @return string
+     */
     public function getEmailAddress()
     {
         return $this->emailAddress;
     }
 
-    public function getConfig()
-    {
-        return $this->config;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public function __toString()
     {
         return parent::__toString() . '; ' .
