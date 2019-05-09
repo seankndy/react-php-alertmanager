@@ -103,7 +103,7 @@ class Slack extends AbstractReceiver
         $client = new Client($this->loop);
         $payload = \http_build_query($params);
         $headers = [
-            'Content-Type' => 'application/x-www-form-urlencoded'
+            'Content-Type' => 'application/x-www-form-urlencoded',
             'Content-Length' => strlen($payload)
         ];
         $request = $client->request('POST', $url, $headers);
