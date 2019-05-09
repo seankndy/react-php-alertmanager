@@ -62,7 +62,7 @@ class Slack extends AbstractReceiver
             'token' => $this->config['api_token'],
             'user' => $this->memberId
         ];
-        return $this->asyncHttpPostJson(
+        return $this->asyncHttpPost(
             'https://slack.com/api/im.open', $params
         )->then(function ($result) use ($msg) {
             if (!isset($result->ok) || $result->ok != 'true'
@@ -77,7 +77,7 @@ class Slack extends AbstractReceiver
                 'channel' => $result->channel->id,
                 'as_user' => 'true'
             ];
-            return $this->asyncHttpPostJson(
+            return $this->asyncHttpPost(
                 'https://slack.com/api/chat.postMessage', $params
             )->then(function ($result) {
                 if (!isset($result->ok) || $result->ok != 'true') {
@@ -89,22 +89,22 @@ class Slack extends AbstractReceiver
     }
 
     /**
-     * Make async HTTP POST to $url with json-encoded $params as payload
+     * Make async HTTP POST to $url with $params as payload
      *
      * @param string $url
      * @param array $params Payload
      *
      * @return PromiseInterface
      */
-    private function asyncHttpPostJson(string $url, array $params)
+    private function asyncHttpPost(string $url, array $params)
     {
         $deferred = new \React\Promise\Deferred();
 
         $client = new Client($this->loop);
-        $jsonParams = \json_encode($params);
+        $payload = \http_build_query($params);
         $headers = [
-            'Content-Type' => 'application/json',
-            'Content-Length' => strlen($jsonParams)
+            'Content-Type' => 'application/x-www-form-urlencoded'
+            'Content-Length' => strlen($payload)
         ];
         $request = $client->request('POST', $url, $headers);
         $request->on('response', function (Response $response) use ($url, $deferred) {
@@ -122,16 +122,18 @@ class Slack extends AbstractReceiver
             $response->on('data', function ($chunk) use (&$respBody) {
                 $respBody .= $chunk;
             });
-            $response->on('end', function() use (&$respBody, $deferred) {
-                // assume data back is JSON-encoded....
-                $respData = \json_decode(\trim($respBody));
+            $response->on('end', function() use (&$respBody, $response, $deferred) {
+                $contentType = \implode(', ', $response->getHeader('Content-Type'));
+                if (strstr($contentType, 'application/json')) {
+                    $respData = \json_decode(\trim($respBody));
+                }
                 $deferred->resolve($respData);
             });
         });
         $request->on('error', function (\Throwable $e) use ($deferred) {
             $deferred->reject($e);
         });
-        $request->end($jsonParams);
+        $request->end($payload);
 
         return $deferred->promise();
     }
