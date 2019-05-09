@@ -124,7 +124,7 @@ class Slack extends AbstractReceiver
             $response->on('end', function() use (&$respBody, $response, $deferred) {
                 $headers = \array_change_key_case($response->getHeaders(), CASE_LOWER);
                 if (isset($headers['content-type']) &&
-                    $headers['content-type'] == 'application/json') {
+                    strstr($headers['content-type'], 'application/json')) {
                     $respBody = \json_decode(\trim($respBody));
                 }
                 $deferred->resolve($respBody);
