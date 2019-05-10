@@ -36,9 +36,14 @@ abstract class AbstractReceiver implements ReceivableInterface
     protected $receiveRecoveries = true;
     /**
      * Alert delay - initial time for receiver to refuse an alert
+     *  0 = disabled
+     * >0 = seconds past alert creation time before alert is receiveable
+     * -1 = special flag meaning until the Alert's updated time is newer than
+     *      it's created time, the alert remains un-receivable.
+     *
      * @var int
      */
-    protected $alertDelay = 10;
+    protected $alertDelay = -1;
     /**
      * @var \SplObjectStorage
      */
@@ -99,9 +104,16 @@ abstract class AbstractReceiver implements ReceivableInterface
             return false;
         }
 
-        // only allow alert if delay time has elapsed since alert creation
-        $minTime = $alert->getCreatedAt() + $this->alertDelay;
-        if (\time() >= $minTime) {
+        // see property docblock for explanation of alertDelay values
+        if ($this->alertDelay == -1) {
+            $meetsDelay = $alert->getUpdatedAt() > $alert->getCreatedAt();
+        } else {
+            $minTime = $alert->getCreatedAt() + $this->alertDelay;
+            $meetsDelay = \time() >= $minTime;
+        }
+
+        // only allow alert if delay time has been met
+        if ($meetsDelay) {
             $lastReceivedTime = $dispatchLog[$alert->getState()] ?? 0;
             if ($lastReceivedTime) {
                 // do not allow alert that has already been received
