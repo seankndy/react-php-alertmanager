@@ -1,7 +1,5 @@
 <?php
-namespace SeanKndy\AlertManager\Receivers;
-
-use SeanKndy\AlertManager\Alerts\Alert;
+namespace SeanKndy\AlertManager\Alerts;
 
 interface FilterInterface
 {

@@ -32,8 +32,7 @@ class Slack extends AbstractReceiver
         $this->memberId = $memberId;
 
         $this->config = \array_merge([
-            'api_token' => '',
-            'message_template' => ''
+            'api_token' => ''
         ], $config);
     }
 
@@ -42,21 +41,11 @@ class Slack extends AbstractReceiver
      */
     public function receive(Alert $alert) : PromiseInterface
     {
-        if (!$this->memberId || !$this->config['api_token']) {
+        if (!$this->memberId || !$this->config['api_token'] || !$this->alertTemplate) {
             return \React\Promise\resolve([]);
         }
 
-        if ($alert instanceof ThrottledReceiverAlert) {
-            $msg = 'Alerts to this receiver have been throttled until ' .
-                \date(DATE_ATOM, $alert->getAttributes()['expiresAt']) . '.';
-        } else {
-            $msg = $this->interpolate(
-                $alert->getAttributes(),
-                ($alert->isRecovered() ?
-                    'RECOVERED from ' . $this->config['message_template'] :
-                    $this->config['message_template'])
-            );
-        }
+        $msg = $this->alertTemplate->detail($alert);
 
         $params = [
             'token' => $this->config['api_token'],

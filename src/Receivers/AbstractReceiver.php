@@ -2,6 +2,8 @@
 namespace SeanKndy\AlertManager\Receivers;
 
 use SeanKndy\AlertManager\Alerts\Alert;
+use SeanKndy\AlertManager\Alerts\FilterIterface;
+use SeanKndy\AlertManager\Alerts\TemplateInterface;
 use SeanKndy\AlertManager\Scheduling\ScheduleInterface;
 use React\Promise\PromiseInterface;
 use Ramsey\Uuid\Uuid;
@@ -48,6 +50,10 @@ abstract class AbstractReceiver implements ReceivableInterface
      * @var \SplObjectStorage
      */
     protected $filters = null;
+    /**
+     * @var TemplateInterface
+     */
+    protected $alertTemplate = null;
 
     public function __construct($id = null)
     {
@@ -349,6 +355,30 @@ abstract class AbstractReceiver implements ReceivableInterface
     public function getFilters()
     {
         return \iterator_to_array($this->filters);
+    }
+
+    /**
+     * Set the value of $alertTemplate
+     *
+     * @param TemplateInterface $alertTemplate
+     *
+     * @return self
+     */
+    public function setAlertTemplate(TemplateInterface $alertTemplate)
+    {
+        $this->alertTemplate = $alertTemplate;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of $alertTemplate
+     *
+     * @return TemplateInterface
+     */
+    public function getAlertTemplate()
+    {
+        return $this->alertTemplate;
     }
 
     /**
