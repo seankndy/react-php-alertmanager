@@ -5,8 +5,8 @@ AlertManager is a single-threaded aysnc IO alert manager written in PHP (using r
 It receives externally-generated alerts/incidents from a collector via a simple HTTP API (JSON) and routes them to receivers.
 Receivers are PHP objects that extend `\SeanKndy\AlertManager\Receivers\AbstractReceiver` or most basic form of a Receiver would implement
 the `\SeanKndy\AlertManager\Receivers\ReceivableInterface` interface.  `AbstractReceiver` provides some commonly desired functionality like
-scheduling, filtering, initial delay and whether or not to receive recovered alerts. Included with AlertManager is an Email receiver, but
-it's very simple to write your own receivers such as to PagerDuty, a database, Slack, etc...
+scheduling, filtering, initial delay and whether or not to receive recovered alerts. Included with AlertManager is an Email receiver and a
+basic Slack receiver, but it's very straightforward to write your own receivers such as to PagerDuty, a database, whatever...
 
 This is similar to Prometheus' Alertmanager, however it's obviously written in PHP and is far simpler.  I wrote it because the rest of my monitoring
 infrastructure is written in PHP as well and I wanted the ability to very easily extend functionality in this environment.  Because the routing is defined
@@ -35,7 +35,7 @@ JSON should be POSTed to http://x.x.x.x:port/api/v1/alerts in the following form
 
 'expiryDuration' is optional and will default to whatever `\SeanKndy\AlertManager\Server::defaultExpiryDuration` is set to.  It is how long before the alert is auto-expired if it has not updated.
 
-'state' is optional and defaults to `ACTIVE`.  It can be `ACTIVE` or `RECOVERED`.
+'state' is optional and defaults to `ACTIVE`.  It can be `ACTIVE`, `INACTIVE`, `ACKNOWLEDGED` or `RECOVERED`.
 
 'createdAt' is optional and is when the alert originally fired.  If this is blank, the current time is used.
 
@@ -66,10 +66,17 @@ $smtpConfig = [
     'recovery_from' => 'recovered@someserver.com' // from address when alert is RECOVERED
 ];
 
-$colin = new Email($loop, 'colin@somecompany.com', $smtpConfig);
-$sean = new Email($loop, 'sean@somecompany.com', $smtpConfig);
-$rob = new Email($loop, 'rob@somecompany.com', $smtpConfig);
-$levi = new Email($loop, 'levi@somecompany.com', $smtpConfig);
+$alertTemplate = SomeAlertTemplate(); // implements Alerts\TemplateInterface
+
+$colin = new Email('colin', $loop, 'colin@somecompany.com', $smtpConfig);
+$sean = new Email('sean', $loop, 'sean@somecompany.com', $smtpConfig);
+$rob = new Email('rob', $loop, 'rob@somecompany.com', $smtpConfig);
+$levi = new Email('levi', $loop, 'levi@somecompany.com', $smtpConfig);
+
+$colin->setAlertTemplate($alertTemplate);
+$sean->setAlertTemplate($alertTemplate);
+$rob->setAlertTemplate($alertTemplate);
+$levi->setAlertTemplate($alertTemplate);
 
 //
 // A Route destination can be anything that implements RoutableInterface
@@ -97,10 +104,10 @@ use SeanKndy\AlertManager\Routing\Router;
 use SeanKndy\AlertManager\Receivers\Group;
 use SeanKndy\AlertManager\Receivers\Email;
 
-$colin = new Email($loop, 'colin@somecompany.com', $smtpConfig);
-$sean = new Email($loop, 'sean@somecompany.com', $smtpConfig);
-$rob = new Email($loop, 'rob@somecompany.com', $smtpConfig);
-$levi = new Email($loop, 'levi@somecompany.com', $smtpConfig);
+$colin = new Email('colin', $loop, 'colin@somecompany.com', $smtpConfig);
+$sean = new Email('sean', $loop, 'sean@somecompany.com', $smtpConfig);
+$rob = new Email('rob', $loop, 'rob@somecompany.com', $smtpConfig);
+$levi = new Email('levi', $loop, 'levi@somecompany.com', $smtpConfig);
 
 $networkGroup = new Group([$sean, $rob]);
 $serverGroup = new Group([$colin, $levi]);
@@ -181,7 +188,7 @@ Any receivers that extend AbstractReceiver can have a time-based schedule to rec
 Similar to scheduling, receivers can filter alerts as well.  AbstractReceiver provides an addFilter() method where you can specify a `\SeanKndy\AlertManager\Receivers\FilterInterface` implementation object.  Quick example:
 
 ```php
-use SeanKndy\AlertManager\Receivers\FilterInterface;
+use SeanKndy\AlertManager\Alerts\FilterInterface;
 use SeanKndy\AlertManager\Receivers\Email;
 
 $sean = new Email($loop, 'sean@somecompany.com', $smtpConfig);
