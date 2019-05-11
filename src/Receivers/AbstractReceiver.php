@@ -2,7 +2,7 @@
 namespace SeanKndy\AlertManager\Receivers;
 
 use SeanKndy\AlertManager\Alerts\Alert;
-use SeanKndy\AlertManager\Alerts\FilterIterface;
+use SeanKndy\AlertManager\Alerts\FilterInterface;
 use SeanKndy\AlertManager\Alerts\TemplateInterface;
 use SeanKndy\AlertManager\Scheduling\ScheduleInterface;
 use React\Promise\PromiseInterface;
