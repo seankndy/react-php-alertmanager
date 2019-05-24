@@ -23,15 +23,15 @@ class Throttler extends ReceiverDecorator
      */
     protected $hitThreshold = 15;
     /**
+     * List of alerts within the past interval
+     * @var Alert[]
+     */
+    protected $alertsInInterval = [];
+    /**
      * Last time a hit occurred
      * @var int
      */
     protected $lastHitTime = 0;
-    /**
-     * Number of hits within the interval
-     * @var int
-     */
-    protected $hitCount = 0;
     /**
      * Hold down time after throttling occurs.
      * @var int
@@ -63,6 +63,7 @@ class Throttler extends ReceiverDecorator
                 // holddown expired, reset to 0
                 $this->holdDownStartTime = 0;
                 $this->startTime = 0;
+                $this->alertsInInterval = [];
             }
         }
 
@@ -70,17 +71,18 @@ class Throttler extends ReceiverDecorator
         // seconds since the last hit, its time to reset start/hits.
         if (!$this->startTime || \time()-$this->lastHitTime > $this->interval) {
             $this->startTime = \time();
-            $this->hitCount = 0;
+            $this->alertsInInterval = [];
         }
 
         $this->lastHitTime = \time();
-        $this->hitCount++;
+        $this->alertsInInterval[] = $alert;
 
         // has hit count exceeed threshold?
-        if ($this->hitCount >= $this->hitThreshold) {
+        if (\count($this->alertsInInterval) >= $this->hitThreshold) {
             $this->holdDownStartTime = \time();
             if ($this->onHoldDownReceiver) {
                 $this->onHoldDownReceiver->receive(new ThrottledReceiverAlert(
+                    $this->alertsInInterval,
                     $this->holdDownStartTime+$this->holdDown
                 ));
             }
