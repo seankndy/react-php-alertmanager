@@ -60,12 +60,14 @@ class Email extends AbstractReceiver
         $process = new Process('php '.__DIR__.'/../../bin/send-email.php', null, $env);
         $process->start($this->loop);
         $deferred = new \React\Promise\Deferred();
+        /*
         $process->stdout->on('data', function ($chunk) {
             echo $chunk;
         });
         $process->stderr->on('data', function ($chunk) {
             echo $chunk;
         });
+        */
         $process->on('exit', function($exitCode, $termSignal) use ($deferred) {
             $deferred->resolve($exitCode);
         });
