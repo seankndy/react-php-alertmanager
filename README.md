@@ -202,3 +202,10 @@ $sean->addFilter(new class implements FilterInterface {
 ```
 
 Note that both Scheduling and Filtering expect simple boolean return values, so they cannot do any IO or long-running operations as that will block the process. The Receivers use a promise-based interface so that they may perform longer IO ops sending mail, connecting to pager services, etc...
+
+
+## Alert Preprocessing
+
+An alert preprocessor gives you the ability to process or act on every Alert prior to it being queued to the server.  A preprocessor has the ability to mutate any alert prior to queueing.  Every preprocessor pushed to the server will run in the order they were pushed, one after the next.
+
+You may develop your own alert pre-processers by implementing `\SeanKndy\AlertManager\Preprocessors\PreprocessorInterface` and then tell the server about it with `Server::pushPreprocessor($preprocessor)`.

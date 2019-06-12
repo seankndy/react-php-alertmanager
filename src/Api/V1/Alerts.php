@@ -4,10 +4,9 @@ namespace SeanKndy\AlertManager\Api\V1;
 use SeanKndy\AlertManager\Alerts\Alert;
 use SeanKndy\AlertManager\Server;
 use Psr\Http\Message\ServerRequestInterface;
-use Evenement\EventEmitter;
 use React\Http\Response as HttpResponse;
 
-class Alerts extends EventEmitter
+class Alerts
 {
     /**
      * @var Server
@@ -45,7 +44,7 @@ class Alerts extends EventEmitter
         $state = $queryParams['state'] ?? null;
 
         $alertArray = [];
-        foreach ($this->server->getQueue() as $alert) {
+        foreach ($this->server->getQueuedAlerts() as $alert) {
             // filter by state
             if ($state && $state != $alert->getState()) {
                 continue;
@@ -78,7 +77,7 @@ class Alerts extends EventEmitter
      *
      * @param ServerRequestInterface $request
      *
-     * @return HttpResponse
+     * @return HttpResponse|PromiseInterface<HttpResponse>
      */
     public function create(ServerRequestInterface $request)
     {
@@ -98,17 +97,24 @@ class Alerts extends EventEmitter
         }
 
         // queue alerts
+        $promises = [];
         foreach ($alerts as $alert) {
-            $this->emit('alert', [$alert]);
-            $this->server->getQueue()->enqueue($alert);
+            $promises[] = $this->server->queueAlert($alert);
         }
 
-        // return positivity
-        return new HttpResponse(
-            201,
-            ['Content-Type' => 'application/json'],
-            \json_encode(['status' => 'success'])
-        );
+        return \React\Promise\all($promises)->then(function() {
+            return new HttpResponse(
+                201,
+                ['Content-Type' => 'application/json'],
+                \json_encode(['status' => 'success'])
+            );
+        }, function($e) {
+            return new HttpResponse(
+                500,
+                ['Content-Type' => 'application/json'],
+                \json_encode(['status' => 'error'])
+            );
+        });
     }
 
     /**

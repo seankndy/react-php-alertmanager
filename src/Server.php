@@ -5,11 +5,13 @@ use SeanKndy\AlertManager\Alerts\Alert;
 use SeanKndy\AlertManager\Alerts\Queue;
 use SeanKndy\AlertManager\Routing\RoutableInterface;
 use SeanKndy\AlertManager\Auth\AuthorizerInterface;
+use SeanKndy\AlertManager\Preprocessors\PreprocessorInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use React\EventLoop\LoopInterface;
 use React\Http\Response as HttpResponse;
 use React\Http\Server as HttpServer;
 use React\Socket\Server as SocketServer;
+use React\Promise\PromiseInterface;
 use Evenement\EventEmitter;
 
 
@@ -32,6 +34,10 @@ class Server extends EventEmitter
      */
     private $router;
     /**
+     * @var \SplObjectStorage
+     */
+    private $preprocessors;
+    /**
      * Used to verify user access to API
      * @var AuthorizerInterface
      */
@@ -51,6 +57,7 @@ class Server extends EventEmitter
         $this->loop = $loop;
         $this->router = $router;
         $this->queue = new Queue();
+        $this->preprocessors = new \SplObjectStorage();
         $this->authorizer = $authorizer;
 
         $this->httpServer = new HttpServer(function (ServerRequestInterface $request) {
@@ -60,9 +67,6 @@ class Server extends EventEmitter
         $this->httpServer->listen($socket);
 
         $alertsApi = new Api\V1\Alerts($this);
-        $alertsApi->on('alert', function ($alert) { // fwd alert
-            $this->emit('alert', [$alert]);
-        });
         $this->httpDispatcher = \FastRoute\simpleDispatcher(
             function(\FastRoute\RouteCollector $r) use ($alertsApi) {
                 $r->addGroup('/api/v1', function (\FastRoute\RouteCollector $r) use ($alertsApi) {
@@ -83,7 +87,7 @@ class Server extends EventEmitter
      *
      * @param ServerRequestInterface $request The incoming request
      *
-     * @return HttpResponse
+     * @return HttpResponse|PromiseInterface<HttpResponse>
      */
     private function handleRequest(ServerRequestInterface $request)
     {
@@ -119,7 +123,27 @@ class Server extends EventEmitter
                         );
                     }
                     $vars = \array_merge([$request], $routeInfo[2]);
-                    return \call_user_func_array($routeInfo[1], $vars);
+                    $result = \call_user_func_array($routeInfo[1], $vars);
+
+                    if ($result instanceof PromiseInterface) {
+                        return $result->done(function($response) {
+                            return $response;
+                        }, function ($e) {
+                            return new HttpResponse(
+                                500,
+                                ['Content-Type' => 'application/json'],
+                                \json_encode(['status' => 'error'])
+                            );
+                        });
+                    } else if ($result instanceof HttpResponse) {
+                        return $result;
+                    } else {
+                        return new HttpResponse(
+                            500,
+                            ['Content-Type' => 'application/json'],
+                            \json_encode(['status' => 'error'])
+                        );
+                    }
                 }, function (\Exception $e) { // error during authorization
                     return new HttpResponse(
                         500,
@@ -211,12 +235,86 @@ class Server extends EventEmitter
     }
 
     /**
-     * Get the queue
+     * Queue an alert
      *
-     * @return Queue
+     * @param Alert $alert Alert to queue
+     * @return PromiseInterface
      */
-    public function getQueue()
+    public function queueAlert(Alert $alert)
     {
-        return $this->queue;
+        $this->emit('alert', [$alert]);
+
+        $this->runPreprocessors($alert)->always(function() use ($alert) {
+            $this->queue->enqueue($alert);
+        });
+    }
+
+    /**
+     * Get queued alerts as array
+     *
+     * @return array
+     */
+    public function getQueuedAlerts()
+    {
+        return \iterator_to_array($this->queue, false);
+    }
+
+    /**
+     * Push a pre-processor
+     *
+     * @param PreprocessorInterface $preprocessor
+     * @return self
+     */
+    public function pushPreprocessor(PreprocessorInterface $preprocessor)
+    {
+        $this->preprocessor->attach($preprocessor);
+
+        return $this;
+    }
+
+    /**
+     * Remove a pre-processor
+     *
+     * @param PreprocessorInterface $preprocessor
+     * @return self
+     */
+    public function removePreprocessor(PreprocessorInterface $preprocessor)
+    {
+        $this->preprocessor->detach($preprocessor);
+
+        return $this;
+    }
+
+    /**
+     * Run pre-processors on Alert
+     *
+     * @param Alert $alert Alert to run preprocessors on
+     * @return PromiseInterface
+     */
+    private function runPreprocessors(Alert $alert)
+    {
+        $preprocessors = \iterator_to_array($this->preprocessors, false);
+
+        // run process() calls in order and in sequence, unless one of them
+        // rejects in which case preprocessors succeeding the failed one
+        // will not run.
+        return \array_reduce(
+            $preprocessors,
+            function ($prev, $cur) use ($alert) {
+                return $prev->then(
+                    function () use ($cur, $alert) {
+                        return $cur->process(
+                            $alert
+                        )->otherwise(function (\Throwable $e) {
+                            $this->emit('error', [$e]);
+                        });
+                    },
+                    function ($e) {
+                        return \React\Promise\reject($e);
+                    }
+                );
+            },
+            \React\Promise\resolve([])
+        );
     }
 }
