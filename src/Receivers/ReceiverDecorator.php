@@ -55,6 +55,21 @@ abstract class ReceiverDecorator implements ReceivableInterface
     }
 
     /**
+     * Find the 'real' receiver behind any layers of decorators
+     *
+     * @return ReceivableInterface
+     */
+    public function resolveReceiver($that = null)
+    {
+        if (!$that) {
+            $that = $this;
+        }
+        return ($that->receiver instanceof self)
+            ? $this->resolveReceiver($this->receiver)
+            : $this->receiver;
+    }
+
+    /**
      * Set the value of Receiver
      *
      * @param ReceivableInterface $receiver
