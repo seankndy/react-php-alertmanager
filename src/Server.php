@@ -63,6 +63,9 @@ class Server extends EventEmitter
         $this->httpServer = new HttpServer(function (ServerRequestInterface $request) {
             return $this->handleRequest($request);
         });
+        $this->httpServer->on('error', function ($e) {
+            $this->emit('error', [$e]);
+        });
         $socket = new SocketServer($listen, $this->loop);
         $this->httpServer->listen($socket);
 
