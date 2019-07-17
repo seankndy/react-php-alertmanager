@@ -129,7 +129,7 @@ class Server extends EventEmitter
                     $result = \call_user_func_array($routeInfo[1], $vars);
 
                     if ($result instanceof PromiseInterface) {
-                        return $result->done(function($response) {
+                        return $result->then(function($response) {
                             return $response;
                         }, function ($e) {
                             return new HttpResponse(
