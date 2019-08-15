@@ -50,7 +50,7 @@ class BasicSchedule implements ScheduleInterface
 
     public function setRepeatFrequency(int $freq)
     {
-        if (!\in_array($freq, [self::FREQ_DAILY,self::FREQ_WEEKLY])) {
+        if (!\in_array($freq, [self::FREQ_NONE,self::FREQ_DAILY,self::FREQ_WEEKLY])) {
             throw new \InvalidArgumentException("Invalid frequency.");
         }
         $this->repeatFrequency = $freq;
