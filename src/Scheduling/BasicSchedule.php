@@ -87,19 +87,12 @@ class BasicSchedule implements ScheduleInterface
             // determine days since the start of schedule
             $daysSinceStart = floor(($atTime - $this->startTime)/86400);
             // divide that by our frequency (either daily(1) or weekly(7))
-            $freqDivisions = ($daysSinceStart/$this->repeatFrequency);
+            $numOccurrences = floor($daysSinceStart/$this->repeatFrequency);
 
             // if that divides cleanly, then $atTime matches
-            if (floor($freqDivisions) % $this->repeatInterval == 0) {
-                $newStartDate = $atTime;
+            if ($numOccurrences % $this->repeatInterval == 0) {
+                $newStartDate = $this->startTime + ($numOccurrences * $this->repeatFrequency * 86400);
 
-                // adjust start date to match startTime's time component
-                if ($this->repeatFrequency == self::FREQ_WEEKLY) {
-                    $dayOfWeek = \date('w', $atTime);
-                    $startDayOfWeek = \date('w', $this->startTime);
-                    $dayDiff = ($startDayOfWeek - $dayOfWeek) * 86400;
-                    $newStartDate += $dayDiff;
-                }
                 // make a new BasicSchedule with new time frames
                 $newStartTime = \mktime(
                     \date('H', $this->startTime),
@@ -110,6 +103,7 @@ class BasicSchedule implements ScheduleInterface
                     \date('Y', $newStartDate)
                 );
                 $newEndTime = $newStartTime + ($this->endTime - $this->startTime);
+
                 return (new self($newStartTime, $newEndTime))->isActive($atTime);
             }
         }
