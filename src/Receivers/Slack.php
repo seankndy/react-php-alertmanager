@@ -49,13 +49,13 @@ class Slack extends AbstractReceiver
 
         $params = [
             'token' => $this->config['api_token'],
-            'user' => $this->memberId
+            'users' => $this->memberId
         ];
         return $this->asyncHttpPost(
-            'https://slack.com/api/im.open', $params
+            'https://slack.com/api/conversations.open', $params
         )->then(function ($result) use ($msg) {
             if (!isset($result->ok) || !$result->ok || !$result->channel->id) {
-                throw new \Exception("Failed response from Slack's im.open: " .
+                throw new \Exception("Failed response from Slack's conversations.open: " .
                     \json_encode($result));
             }
 
