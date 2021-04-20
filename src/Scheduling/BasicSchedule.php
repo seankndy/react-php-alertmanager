@@ -11,15 +11,20 @@ class BasicSchedule implements ScheduleInterface
     const FREQ_WEEKLY = 7;
 
     /**
-     * Start of schedule, timestamp
+     * Start of schedule, EPOCH timestamp
      * @var int
      */
     private $startTime;
     /**
-     * End of schedule
+     * End of schedule, EPOCH timestamp
      * @var int
      */
     private $endTime;
+    /**
+     * Timezone in which we're operating.
+     * @var \DateTimeZone
+     */
+    private $timezone;
     /**
      * Repeat frequency, FREQ_NONE, FREQ_DAILY or FREQ_WEEKLY
      * @var int
@@ -32,44 +37,51 @@ class BasicSchedule implements ScheduleInterface
     private $repeatInterval = 0;
 
 
-    public function __construct(int $startTime, int $endTime)
+    public function __construct(int $startTime, int $endTime, $timezone)
     {
         $this->startTime = $startTime;
         $this->endTime = $endTime;
+        $this->timezone = ($timezone instanceof \DateTimeZone) ? $timezone : new \DateTimeZone($timezone);
     }
 
-    public function setStartTime(int $time)
+    public function setStartTime(int $time): self
     {
         $this->startTime = $time;
+
+        return $this;
     }
 
-    public function setEndTime(int $time)
+    public function setEndTime(int $time): self
     {
         $this->endTime = $time;
+
+        return $this;
     }
 
-    public function setRepeatFrequency(int $freq)
+    public function setRepeatFrequency(int $freq): self
     {
         if (!\in_array($freq, [self::FREQ_NONE,self::FREQ_DAILY,self::FREQ_WEEKLY])) {
             throw new \InvalidArgumentException("Invalid frequency.");
         }
         $this->repeatFrequency = $freq;
+
         return $this;
     }
 
-    public function setRepeatInterval(int $interval)
+    public function setRepeatInterval(int $interval): self
     {
         $this->repeatInterval = $interval;
+
         return $this;
     }
 
     /**
      * {@inheritDoc}
      */
-    public function isActive(int $atTime = 0) : bool
+    public function isActive(int $atTime = 0): bool
     {
         if (!$atTime) {
-            $atTime = \time();
+            $atTime = (new \DateTime('now', $this->timezone))->getTimestamp();
         }
 
         // atTime before start time
@@ -84,30 +96,26 @@ class BasicSchedule implements ScheduleInterface
 
         // atTime is not within start/end time, check for repetition
         if ($this->repeatFrequency != self::FREQ_NONE && $this->repeatInterval > 0) {
-            // determine days since the start of schedule
-            $daysSinceStart = floor(($atTime - $this->startTime)/86400);
-            // divide that by our frequency (either daily(1) or weekly(7))
-            $numOccurrences = floor($daysSinceStart/$this->repeatFrequency);
+            $duration = $this->endTime - $this->startTime;
 
-            // if that divides cleanly, then $atTime matches
-            if ($numOccurrences % $this->repeatInterval == 0) {
-                $newStartDate = $this->startTime + ($numOccurrences * $this->repeatFrequency * 86400);
+            $period = new \DatePeriod(
+                (new \DateTime('now', $this->timezone))->setTimestamp($this->startTime),
+                new \DateInterval('P' . $this->repeatInterval . ($this->repeatFrequency == self::FREQ_WEEKLY ? 'W' : 'D')),
+                (new \DateTime('now', $this->timezone))->setTimestamp($atTime+86400)
+            );
 
-                // make a new BasicSchedule with new time frames
-                $newStartTime = \mktime(
-                    \date('H', $this->startTime),
-                    \date('i', $this->startTime),
-                    \date('s', $this->startTime),
-                    \date('n', $newStartDate),
-                    \date('j', $newStartDate),
-                    \date('Y', $newStartDate)
-                );
-                $newEndTime = $newStartTime + ($this->endTime - $this->startTime);
+            foreach ($period as $startDateTime) {
+                $endDateTime = clone $startDateTime;
+                $endDateTime->modify('+ ' . $duration . ' seconds');
 
-                return (new self($newStartTime, $newEndTime))->isActive($atTime);
+                // atTime is within start/end time
+                if ($atTime >= $startDateTime->getTimestamp() && $atTime <= $endDateTime->getTimestamp()) {
+                    return true;
+                }
             }
         }
 
         return false;
     }
+
 }
