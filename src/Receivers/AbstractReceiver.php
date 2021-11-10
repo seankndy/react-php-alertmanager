@@ -26,6 +26,12 @@ abstract class AbstractReceiver implements ReceivableInterface
      */
     protected $schedules = null;
     /**
+     * ScheduleInterface determining when the receiver should NOT be active
+     * If any schedule here is active then it overrides the above schedules.
+     * @var \SplObjectStorage
+     */
+    protected $exclusionSchedules = null;
+    /**
      * How many seconds after initial notify to continually re-notify
      * (if state != ACKNOWLEDGED)
      * @var int
@@ -63,6 +69,7 @@ abstract class AbstractReceiver implements ReceivableInterface
             $this->id = $id;
         }
         $this->schedules = new \SplObjectStorage();
+        $this->exclusionSchedules = new \SplObjectStorage();
         $this->filters = new \SplObjectStorage();
     }
 
@@ -178,6 +185,19 @@ abstract class AbstractReceiver implements ReceivableInterface
         return $this;
     }
 
+
+    /**
+     * Add ScheduleInterface (exclusion) for this Receiver
+     *
+     * @return self
+     */
+    public function addExclusionSchedule(ScheduleInterface $schedule)
+    {
+        $this->exclusionSchedules->attach($schedule);
+
+        return $this;
+    }
+
     /**
      * Remove ScheduleInterface
      *
@@ -186,6 +206,18 @@ abstract class AbstractReceiver implements ReceivableInterface
     public function removeSchedule(ScheduleInterface $schedule)
     {
         $this->schedules->detach($schedule);
+
+        return $this;
+    }
+
+    /**
+     * Remove ScheduleInterface (exclusion)
+     *
+     * @return self
+     */
+    public function removeExclusionSchedule(ScheduleInterface $schedule)
+    {
+        $this->exclusionSchedules->detach($schedule);
 
         return $this;
     }
@@ -208,6 +240,23 @@ abstract class AbstractReceiver implements ReceivableInterface
     }
 
     /**
+     * Set all exclusion schedules via an array
+     *
+     * @param ScheduleInterface[] schedules
+     *
+     * @return self
+     */
+    public function setExclusionSchedules(array $schedules)
+    {
+        $this->exclusionSchedules = new \SplObjectStorage();
+        foreach ($schedules as $schedule) {
+            $this->addExclusionSchedule($schedule);
+        }
+
+        return $this;
+    }
+
+    /**
      * Get the value of Schedules determing when the receiver is active
      *
      * @return ScheduleInterface[]
@@ -215,6 +264,16 @@ abstract class AbstractReceiver implements ReceivableInterface
     public function getSchedules()
     {
         return \iterator_to_array($this->schedules);
+    }
+
+    /**
+     * Get all exclusion schedules as array.
+     *
+     * @return ScheduleInterface[]
+     */
+    public function getExclusionSchedules()
+    {
+        return \iterator_to_array($this->exclusionSchedules);
     }
 
     /**
@@ -271,15 +330,28 @@ abstract class AbstractReceiver implements ReceivableInterface
      */
     public function isActivelyScheduled()
     {
+        // first check if any exclusion schedules are active.
+        // if they are, then user is not active.
+        foreach ($this->exclusionSchedules as $schedule) {
+            if ($schedule->isActive()) {
+                return false;
+            }
+        }
+
+        // if no schedules exist, user is always active.
         if (\count($this->schedules) == 0) {
             return true;
         }
 
+        // check if any user schedules are active and if so
+        // then the user is active.
         foreach ($this->schedules as $schedule) {
             if ($schedule->isActive()) {
                 return true;
             }
         }
+
+        // user not active
         return false;
     }
 
@@ -389,6 +461,7 @@ abstract class AbstractReceiver implements ReceivableInterface
     public function __toString()
     {
         return 'id=' . $this->id . '; num-schedules=' . \count($this->schedules) . '; ' .
+            'num-exclusion-schedules=' . \count($this->exclusionSchedules) . '; ' .
             'receive-recoveries=' . ($this->receiveRecoveries ? 'TRUE' : 'FALSE') . '; ' .
             'repeat-interval=' . $this->repeatInterval . 'sec; ' .
             'alert-delay=' . $this->alertDelay . 'sec; ' .
