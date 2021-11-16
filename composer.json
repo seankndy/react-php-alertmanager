@@ -3,13 +3,15 @@
     "description": "async (reactphp) alert routing/dispatching",
     "type": "project",
     "require": {
-        "php": ">=7.1",
+        "php": ">=7.4",
         "react/http": "^0.8.4",
         "react/child-process": "^0.6.1",
         "swiftmailer/swiftmailer": "^6.2",
         "ramsey/uuid": "^4.0",
         "nikic/fast-route": "^1.3",
-        "react/http-client": "^0.5.9"
+        "react/http-client": "^0.5.9",
+        "nesbot/carbon": "^2.54",
+        "ext-json": "*"
     },
     "autoload": {
         "psr-4": {"SeanKndy\\AlertManager\\": "src/"}
@@ -26,6 +28,7 @@
         }
     ],
     "require-dev": {
-        "phpunit/phpunit": "^9.5"
+        "phpunit/phpunit": "^9.5",
+        "spatie/test-time": "^1.2"
     }
 }

@@ -4,6 +4,7 @@ namespace SeanKndy\AlertManager\Receivers;
 use SeanKndy\AlertManager\Alerts\Alert;
 use SeanKndy\AlertManager\Alerts\ThrottledReceiverAlert;
 use React\Promise\PromiseInterface;
+use Carbon\Carbon;
 
 class Throttler extends ReceiverDecorator
 {
@@ -54,8 +55,10 @@ class Throttler extends ReceiverDecorator
      */
     public function receive(Alert $alert) : PromiseInterface
     {
+        $now = Carbon::now()->timestamp;
+
         if ($this->holdDownStartTime) {
-            if (\time() - $this->holdDownStartTime < $this->holdDown) {
+            if ($now - $this->holdDownStartTime < $this->holdDown) {
                 // under holddown, just silently return
                 $alert->logDispatch($this->resolveReceiver());
                 return \React\Promise\resolve([]);
@@ -69,17 +72,17 @@ class Throttler extends ReceiverDecorator
 
         // if no start time (first hit ever) or if it's been over $this->interval
         // seconds since the last hit, its time to reset start/hits.
-        if (!$this->startTime || \time()-$this->lastHitTime > $this->interval) {
-            $this->startTime = \time();
+        if (!$this->startTime || $now-$this->lastHitTime > $this->interval) {
+            $this->startTime = $now;
             $this->alertsInInterval = [];
         }
 
-        $this->lastHitTime = \time();
+        $this->lastHitTime = $now;
         $this->alertsInInterval[] = $alert;
 
         // has hit count exceeed threshold?
         if (\count($this->alertsInInterval) >= $this->hitThreshold) {
-            $this->holdDownStartTime = \time();
+            $this->holdDownStartTime = $now;
             if ($this->onHoldDownReceiver) {
                 $this->onHoldDownReceiver->receive(new ThrottledReceiverAlert(
                     $this->alertsInInterval,

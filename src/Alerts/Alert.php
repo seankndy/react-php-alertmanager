@@ -1,6 +1,7 @@
 <?php
 namespace SeanKndy\AlertManager\Alerts;
 
+use Carbon\Carbon;
 use React\Promise\PromiseInterface;
 use SeanKndy\AlertManager\Receivers\ReceivableInterface;
 
@@ -13,12 +14,12 @@ class Alert
 
     /**
      * State: either ACTIVE, INACTIVE, RECOVERED or ACKNOWLEDGED
-     * @var int
+     * @var string
      */
     protected $state;
     /**
      * Serves as unique identifier for the Alert.
-     * @var mixed
+     * @var string
      */
     protected $name;
     /**
@@ -47,14 +48,18 @@ class Alert
      */
     private $dispatchLog;
 
-    public function __construct($name, string $state, array $attributes,
-        int $createdAt = 0, int $expiryDuration = 600)
-    {
+    public function __construct(
+        string $name,
+        string $state,
+        array $attributes = [],
+        int $createdAt = 0,
+        int $expiryDuration = 600
+    ) {
         $this->name = $name;
         $this->setState($state);
         $this->attributes = $attributes;
-        $this->createdAt = $createdAt ? $createdAt : \time();
-        $this->updatedAt = \time();
+        $this->createdAt = $createdAt ? $createdAt : Carbon::now()->timestamp;
+        $this->updatedAt = Carbon::now()->timestamp;
         $this->expiryDuration = $expiryDuration;
         $this->dispatchLog = new \SplObjectStorage();
     }
@@ -214,7 +219,7 @@ class Alert
         } else {
             $log = [];
         }
-        $log[$forState] = \time();
+        $log[$forState] = Carbon::now()->timestamp;
 
         $this->dispatchLog[$receiver] = $log;
 
@@ -283,7 +288,7 @@ class Alert
      */
     public function hasExpired()
     {
-        return \time() - $this->updatedAt >= $this->expiryDuration;
+        return Carbon::now()->timestamp - $this->updatedAt >= $this->expiryDuration;
     }
 
     /**
@@ -309,7 +314,7 @@ class Alert
                 $a->state = self::ACTIVE;
             }
             if (!isset($a->createdAt)) {
-                $a->createdAt = \time();
+                $a->createdAt = Carbon::now()->timestamp;
             }
             $alerts[] = new self($a->name, $a->state, (array)$a->attributes, $a->createdAt,
                 isset($a->expiryDuration) ? $a->expiryDuration : $defaultExpiry);
@@ -412,7 +417,7 @@ class Alert
         $this->setState($alert->getState());
         $this->attributes = $alert->getAttributes();
         $this->expiryDuration = $alert->getExpiryDuration();
-        $this->updatedAt = \time();
+        $this->updatedAt = Carbon::now()->timestamp;
     }
 
     /**
