@@ -16,6 +16,14 @@ class Aggregator extends ReceiverDecorator
     private int $interval = 15;
 
     /**
+     * The minimum number of alerts required in order to send an aggregated
+     * alert.  If the number of aggregated alerts is less than this number
+     * at the end of an interval, then individual alerts will be sent rather
+     * than the aggregated alert.
+     */
+    private int $minimum = 0;
+
+    /**
      * The time that the current interval started.
      * This is initially set when an alert is received and this value was null.
      */
@@ -23,7 +31,7 @@ class Aggregator extends ReceiverDecorator
 
     /**
      * Alerts that have been aggregated within the interval.
-     * @var \SplObjectStorage
+     * @var \SplObjectStorage<Alert>
      */
     private \SplObjectStorage $alerts;
 
@@ -61,14 +69,22 @@ class Aggregator extends ReceiverDecorator
         }
 
         if ($this->intervalStart->diffInMinutes(Carbon::now()) >= $this->interval) {
-            // send aggregated alert to the receiver
-            $promise = $this->receiver->receive(new AggregatedAlert(
-                \iterator_to_array($this->alerts)
-            ));
+            // send aggregated alert to the receiver if number of alerts is >= $this->minimum
+            if ($this->alerts->count() >= $this->minimum) {
+                $promise = $this->receiver->receive(new AggregatedAlert(
+                    \iterator_to_array($this->alerts)
+                ));
 
-            // logDispatch all the alerts for $this->resolveReceiver()
-            foreach ($this->alerts as $alert) {
-                $alert->logDispatch($this->resolveReceiver());
+                // logDispatch all the alerts for $this->resolveReceiver()
+                foreach ($this->alerts as $a) {
+                    $a->logDispatch($this->resolveReceiver());
+                }
+            } else {
+                $promises = [];
+                foreach ($this->alerts as $a) {
+                    $promises[] = $a->dispatch($this->resolveReceiver());
+                }
+                $promise = \React\Promise\all($promises);
             }
 
             // clear the data for this interval
@@ -83,6 +99,11 @@ class Aggregator extends ReceiverDecorator
     public function setInterval(int $interval): void
     {
         $this->interval = $interval;
+    }
+
+    public function setMinimum(int $min): void
+    {
+        $this->minimum = $min;
     }
 
     protected function clear(): void

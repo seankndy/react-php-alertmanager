@@ -70,6 +70,66 @@ class AggregatorTest extends TestCase
     }
 
     /** @test */
+    public function it_sends_aggregated_alert_if_greater_than_the_minimum()
+    {
+        $alert1 = new Alert('test1', Alert::ACTIVE, []);
+        $alert2 = new Alert('test2', Alert::ACTIVE, []);
+        $alert3 = new Alert('test3', Alert::ACTIVE, []);
+
+        $mockReceiver = $this->createMock(AbstractReceiver::class);
+        $mockReceiver->expects($this->any())->method('isReceivable')->willReturn(true);
+        $mockReceiver->expects($this->once())->method('receive')->with($this->callback(function($arg) {
+            return $arg instanceof AggregatedAlert && \array_map(fn($a) => $a->getName(), $arg->alerts) == [
+                'test1',
+                'test2',
+                'test3'
+            ];
+        }));
+
+        $aggregator = new Aggregator($mockReceiver);
+        $aggregator->setInterval(15);
+        $aggregator->setMinimum(2);
+
+        TestTime::freeze();
+
+        $aggregator->route($alert1);
+        $aggregator->route($alert2);
+
+        TestTime::addMinute(15);
+
+        $aggregator->route($alert3);
+    }
+
+    /** @test */
+    public function it_sends_individual_alerts_if_under_the_minimum()
+    {
+        $alert1 = new Alert('test1', Alert::ACTIVE, []);
+        $alert2 = new Alert('test2', Alert::ACTIVE, []);
+        $alert3 = new Alert('test3', Alert::ACTIVE, []);
+
+        $mockReceiver = $this->createMock(AbstractReceiver::class);
+        $mockReceiver->expects($this->any())->method('isReceivable')->willReturn(true);
+        $mockReceiver->expects($this->exactly(3))->method('receive')->withConsecutive(
+            [$alert1],
+            [$alert2],
+            [$alert3]
+        );
+
+        $aggregator = new Aggregator($mockReceiver);
+        $aggregator->setInterval(15);
+        $aggregator->setMinimum(5);
+
+        TestTime::freeze();
+
+        $aggregator->route($alert1);
+        $aggregator->route($alert2);
+
+        TestTime::addMinute(15);
+
+        $aggregator->route($alert3);
+    }
+
+    /** @test */
     public function it_logs_receiver_dispatch_on_each_alert()
     {
         $alert1 = new Alert('test1', Alert::ACTIVE, []);
