@@ -7,6 +7,8 @@ use SeanKndy\AlertManager\Receivers\ReceivableInterface;
 
 class Alert
 {
+    public static int $defaultExpiryDuration = 600;
+
     const ACTIVE = 'ACTIVE';
     const INACTIVE = 'INACTIVE'; // aka "deleted"
     const RECOVERED = 'RECOVERED';
@@ -14,149 +16,95 @@ class Alert
 
     /**
      * State: either ACTIVE, INACTIVE, RECOVERED or ACKNOWLEDGED
-     * @var string
      */
-    protected $state;
+    protected string $state;
     /**
      * Serves as unique identifier for the Alert.
-     * @var string
      */
-    protected $name;
+    protected string $name;
     /**
      * All alert details are arbitrarily stored here.
-     * @var array
      */
-    protected $attributes = [];
+    protected array $attributes = [];
     /**
      * Time of creation.
-     * @var int
      */
-    protected $createdAt;
+    protected int $createdAt;
     /**
      * Time last updated.
-     * @var int
      */
-    protected $updatedAt;
+    protected int $updatedAt;
     /**
      * This value + $updatedAt = time to mark alert expired
-     * @var int
      */
-    protected $expiryDuration;
+    protected int $expiryDuration;
     /**
      * Keep history of which Receiver's this Alert has dispatched to.
-     * @var \SplObjectStorage
      */
-    private $dispatchLog;
+    private \SplObjectStorage $dispatchLog;
 
     public function __construct(
         string $name,
         string $state,
         array $attributes = [],
         int $createdAt = 0,
-        int $expiryDuration = 600
+        int $expiryDuration = null
     ) {
         $this->name = $name;
         $this->setState($state);
         $this->attributes = $attributes;
-        $this->createdAt = $createdAt ? $createdAt : Carbon::now()->timestamp;
+        $this->createdAt = $createdAt ?: Carbon::now()->timestamp;
         $this->updatedAt = Carbon::now()->timestamp;
-        $this->expiryDuration = $expiryDuration;
+        $this->expiryDuration = $expiryDuration === null ? self::$defaultExpiryDuration : $expiryDuration;
         $this->dispatchLog = new \SplObjectStorage();
     }
 
     /**
      * Dispatch this alert to a Receiver
-     *
-     * @param ReceivableInterface $receiver
-     *
-     * @return PromiseInterface
      */
-    public function dispatch(ReceivableInterface $receiver)
+    public function dispatch(ReceivableInterface $receiver): PromiseInterface
     {
         $this->logDispatch($receiver);
         return $receiver->receive($this);
     }
 
-    /**
-     * Get the value of name
-     *
-     * @return mixed
-     */
-    public function getName()
+    public function getName(): string
     {
         return $this->name;
     }
 
-    /**
-     * Set the value of name
-     *
-     * @param mixed name
-     *
-     * @return self
-     */
-    public function setName($name)
+    public function setName($name): self
     {
         $this->name = $name;
 
         return $this;
     }
 
-    /**
-     * Set the value of Created At
-     *
-     * @param int createdAt
-     *
-     * @return self
-     */
-    public function setCreatedAt(int $createdAt)
+    public function setCreatedAt(int $createdAt): self
     {
         $this->createdAt = $createdAt;
 
         return $this;
     }
 
-    /**
-     * Get the value of Created At
-     *
-     * @return int
-     */
-    public function getCreatedAt()
+    public function getCreatedAt(): int
     {
         return $this->createdAt;
     }
 
-    /**
-     * Set the value of Update At
-     *
-     * @param int updatedAt
-     *
-     * @return self
-     */
-    public function setUpdatedAt(int $updatedAt)
+    public function setUpdatedAt(int $updatedAt): self
     {
         $this->updatedAt = $updatedAt;
 
         return $this;
     }
 
-    /**
-     * Get the value of Updated At
-     *
-     * @return int
-     */
-    public function getUpdatedAt()
+    public function getUpdatedAt(): int
     {
         return $this->updatedAt;
     }
 
-    /**
-     * Set the value of State
-     *
-     * @param string $state
-     *
-     * @return self
-     */
-    public function setState(string $state)
+    public function setState(string $state): self
     {
         if (!\in_array($state, [self::ACTIVE, self::INACTIVE, self::RECOVERED, self::ACKNOWLEDGED])) {
             throw new \InvalidArgumentException("Invalid state given: $state");
@@ -166,34 +114,17 @@ class Alert
         return $this;
     }
 
-    /**
-     * Get the value of State
-     *
-     * @return string
-     */
-    public function getState()
+    public function getState(): string
     {
         return $this->state;
     }
 
-    /**
-     * Get the dispatch log
-     *
-     * @return \SplObjectStorage
-     */
-    public function getDispatchLog()
+    public function getDispatchLog(): \SplObjectStorage
     {
         return $this->dispatchLog;
     }
 
-    /**
-     * Set the value of dispatchLog
-     *
-     * @param \SplObjectStorage $log
-     *
-     * @return self
-     */
-    public function setDispatchLog(\SplObjectStorage $log)
+    public function setDispatchLog(\SplObjectStorage $log): self
     {
         $this->dispatchLog = $log;
 
@@ -204,11 +135,9 @@ class Alert
      * Log a dispatch to receiver
      *
      * @param ReceivableInterface $receiver Receiver dispatched to
-     * @param string $forState State of Alert when dispatched
-     *
-     * @return self
+     * @param string|null $forState State of Alert when dispatchedf
      */
-    public function logDispatch(ReceivableInterface $receiver, string $forState = null)
+    public function logDispatch(ReceivableInterface $receiver, string $forState = null): self
     {
         if (!$forState) {
             $forState = $this->state;
@@ -228,12 +157,8 @@ class Alert
 
     /**
      * Get the dispatch log for a receiver
-     *
-     * @param ReceivableInterface $receiver
-     *
-     * @return array
      */
-    public function getDispatchLogForReceiver(ReceivableInterface $receiver)
+    public function getDispatchLogForReceiver(ReceivableInterface $receiver): array
     {
         if (isset($this->dispatchLog[$receiver])) {
             return $this->dispatchLog[$receiver];
@@ -243,50 +168,37 @@ class Alert
 
     /**
      * Helper to determine if state == ACTIVE
-     *
-     * @return bool
      */
-    public function isActive()
+    public function isActive(): bool
     {
         return $this->state === self::ACTIVE;
     }
 
     /**
      * Helper to determine if state == RECOVERED
-     *
-     * @return bool
      */
-    public function isRecovered()
+    public function isRecovered(): bool
     {
         return $this->state === self::RECOVERED;
     }
 
     /**
      * Helper to determine if state == ACKNOWLEDGED
-     *
-     * @return bool
      */
-    public function isAcknowledged()
+    public function isAcknowledged(): bool
     {
         return $this->state === self::ACKNOWLEDGED;
     }
 
     /**
      * Helper to determine if state == INACTIVE
-     *
-     * @return bool
      */
-    public function isInactive()
+    public function isInactive(): bool
     {
         return $this->state === self::INACTIVE;
     }
 
-    /**
-     * Has alert expired?
-     *
-     * @return bool
-     */
-    public function hasExpired()
+    public function hasExpired(): bool
     {
         return Carbon::now()->timestamp - $this->updatedAt >= $this->expiryDuration;
     }
@@ -294,10 +206,10 @@ class Alert
     /**
      * Build Alert objects from JSON
      *
-     * @throws RuntimeException
-     * @return Alert
+     * @throws \RuntimeException
+     * @return Alert[]
      */
-    public static function fromJSON(string $jsonString, int $defaultExpiry = 600)
+    public static function fromJSON(string $jsonString): array
     {
         $json = \json_decode($jsonString);
         if (!$json) {
@@ -306,6 +218,8 @@ class Alert
         if (!\is_array($json)) {
             $json = [$json];
         }
+
+        $alerts = [];
         foreach ($json as $a) {
             if (!isset($a->name, $a->attributes)) {
                 throw new \RuntimeException("Name and Attributes required.");
@@ -316,18 +230,22 @@ class Alert
             if (!isset($a->createdAt)) {
                 $a->createdAt = Carbon::now()->timestamp;
             }
-            $alerts[] = new self($a->name, $a->state, (array)$a->attributes, $a->createdAt,
-                isset($a->expiryDuration) ? $a->expiryDuration : $defaultExpiry);
+
+            $alerts[] = new self(
+                $a->name,
+                $a->state,
+                (array)$a->attributes,
+                $a->createdAt,
+                $a->expiryDuration ?? self::$defaultExpiryDuration
+            );
         }
         return $alerts;
     }
 
     /**
      * Convert this Alert object to array
-     *
-     * @return string
      */
-    public function toArray()
+    public function toArray(): array
     {
         $dispatchedTo = [];
         foreach ($this->dispatchLog as $receiver) {
@@ -351,22 +269,16 @@ class Alert
 
     /**
      * Convert this Alert object to JSON string
-     *
-     * @return string
      */
-    public function toJSON()
+    public function toJSON(): string
     {
         return \json_encode($this->toArray());
     }
 
     /**
      * Set the value of Attributes
-     *
-     * @param array attributes
-     *
-     * @return self
      */
-    public function setAttributes(array $attributes)
+    public function setAttributes(array $attributes): self
     {
         $this->attributes = $attributes;
 
@@ -375,22 +287,16 @@ class Alert
 
     /**
      * Get the value of Attributes
-     *
-     * @return array
      */
-    public function getAttributes()
+    public function getAttributes(): array
     {
         return $this->attributes;
     }
 
     /**
      * Set the value of Expiry Duration
-     *
-     * @param int expiryDuration
-     *
-     * @return self
      */
-    public function setExpiryDuration(int $expiryDuration)
+    public function setExpiryDuration(int $expiryDuration): self
     {
         $this->expiryDuration = $expiryDuration;
 
@@ -399,20 +305,16 @@ class Alert
 
     /**
      * Get the value of Expiry Duration
-     *
-     * @return int
      */
-    public function getExpiryDuration()
+    public function getExpiryDuration(): int
     {
         return $this->expiryDuration;
     }
 
     /**
      * Update this alert with values from another Alert
-     *
-     * @return void
      */
-    public function updateFromAlert(Alert $alert)
+    public function updateFromAlert(Alert $alert): void
     {
         $this->setState($alert->getState());
         $this->attributes = $alert->getAttributes();

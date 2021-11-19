@@ -73,6 +73,8 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/translation-contracts" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/translation" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/spatie/test-time" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/rector/rector" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/phpstan/phpstan" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

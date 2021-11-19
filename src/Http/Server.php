@@ -1,0 +1,128 @@
+<?php
+
+namespace SeanKndy\AlertManager\Http;
+
+use Evenement\EventEmitter;
+use Psr\Http\Message\ServerRequestInterface;
+use React\EventLoop\LoopInterface;
+use React\Http\Response as HttpResponse;
+use React\Http\Server as ReactHttpServer;
+use React\Promise\PromiseInterface;
+use React\Socket\SocketServer;
+use SeanKndy\AlertManager\Alerts\Processor;
+use SeanKndy\AlertManager\Auth\AuthorizerInterface;
+
+class Server extends EventEmitter
+{
+    private LoopInterface $loop;
+
+    private ReactHttpServer $http;
+
+    private \FastRoute\Dispatcher $routeDispatcher;
+
+    /**
+     * Used to verify user access to API
+     */
+    private ?AuthorizerInterface $authorizer = null;
+
+    public function __construct(
+        LoopInterface $loop,
+        string $listen,
+        AuthorizerInterface $authorizer,
+        Processor $alertProcessor
+    ) {
+        $this->loop = $loop;
+        $this->authorizer = $authorizer;
+
+        $this->http = new ReactHttpServer(fn(ServerRequestInterface $request) => $this->handleRequest($request));
+        $this->http->on('error', fn($e) => $this->emit('error', [$e]));
+        $socket = new SocketServer($listen, [], $this->loop);
+        $this->http->listen($socket);
+
+        $alertsApi = new Api\V1\Alerts($alertProcessor);
+        $this->routeDispatcher = \FastRoute\simpleDispatcher(
+            function(\FastRoute\RouteCollector $r) use ($alertsApi) {
+                $r->addGroup('/api/v1', function (\FastRoute\RouteCollector $r) use ($alertsApi) {
+                    $r->addRoute('GET', '/alerts', [$alertsApi, 'get']);
+                    $r->addRoute('POST', '/alerts', [$alertsApi, 'create']);
+                    $r->addRoute('POST', '/alerts/quiesce', [$alertsApi, 'quiesce']);
+                });
+            }
+        );
+    }
+
+    /**
+     * @return HttpResponse|PromiseInterface<HttpResponse>
+     */
+    private function handleRequest(ServerRequestInterface $request)
+    {
+        $routeInfo = $this->routeDispatcher->dispatch(
+            $request->getMethod(), $request->getUri()->getPath()
+        );
+
+        switch ($routeInfo[0]) {
+            case \FastRoute\Dispatcher::NOT_FOUND:
+                return new HttpResponse(
+                    404,
+                    ['Content-Type' => 'application/json'],
+                    \json_encode(['status' => 'error'])
+                );
+            case \FastRoute\Dispatcher::METHOD_NOT_ALLOWED:
+                return new HttpResponse(
+                    405,
+                    ['Content-Type' => 'application/json'],
+                    \json_encode(['status' => 'error'])
+                );
+            case \FastRoute\Dispatcher::FOUND:
+                if ($this->authorizer) {
+                    $authPromise = $this->authorizer->authorize($request);
+                } else {
+                    $authPromise = \React\Promise\resolve(true);
+                }
+                return $authPromise->then(function (bool $authenticated) use ($request, $routeInfo) {
+                    if (!$authenticated) {
+                        return new HttpResponse(
+                            401,
+                            ['Content-Type' => 'application/json'],
+                            \json_encode(['status' => 'error'])
+                        );
+                    }
+                    $vars = \array_merge([$request], $routeInfo[2]);
+                    $result = \call_user_func_array($routeInfo[1], $vars);
+
+                    if ($result instanceof PromiseInterface) {
+                        return $result->then(function($response) {
+                            return $response;
+                        }, function ($e) {
+                            return new HttpResponse(
+                                500,
+                                ['Content-Type' => 'application/json'],
+                                \json_encode(['status' => 'error'])
+                            );
+                        });
+                    } else if ($result instanceof HttpResponse) {
+                        return $result;
+                    } else {
+                        return new HttpResponse(
+                            500,
+                            ['Content-Type' => 'application/json'],
+                            \json_encode(['status' => 'error'])
+                        );
+                    }
+                }, function (\Exception $e) { // error during authorization
+                    return new HttpResponse(
+                        500,
+                        ['Content-Type' => 'application/json'],
+                        \json_encode(['status' => 'error'])
+                    );
+                });
+        }
+    }
+
+    public function setAuthorizer(AuthorizerInterface $authorizer): self
+    {
+        $this->authorizer = $authorizer;
+
+        return $this;
+    }
+}

@@ -33,7 +33,7 @@ JSON should be POSTed to http://x.x.x.x:port/api/v1/alerts in the following form
 
 'name' should be a unique name for the alert, but should stay consistent between submissions if it's the same incident.
 
-'expiryDuration' is optional and will default to whatever `\SeanKndy\AlertManager\Server::defaultExpiryDuration` is set to.  It is how long before the alert is auto-expired if it has not updated.
+'expiryDuration' is optional and will default to whatever `\SeanKndy\AlertManager\Alerts\Alert::$defaultExpiryDuration` is set to.  It is how long before the alert is auto-expired if it has not updated.
 
 'state' is optional and defaults to `ACTIVE`.  It can be `ACTIVE`, `INACTIVE`, `ACKNOWLEDGED` or `RECOVERED`.
 
@@ -52,7 +52,7 @@ auto-resolve, or you can submit the alert with status set to `RECOVERED` to expi
 
 ```php
 <?php
-use SeanKndy\AlertManager\Server;
+use SeanKndy\AlertManager\Alerts\Processor;
 use SeanKndy\AlertManager\Routing\Route;
 use SeanKndy\AlertManager\Routing\Router;
 use SeanKndy\AlertManager\Receivers\Email;
@@ -90,7 +90,11 @@ $router = (new Router())->addRoutes([
     Route::toDestination($rob)->where('tag', 'switching')
 ]);
 
-$server = new \SeanKndy\AlertManager\Server('0.0.0.0:8514', $loop, $router);
+$server = new \SeanKndy\AlertManager\Http\Server(
+    $loop,
+    '0.0.0.0:8514',
+    new \SeanKndy\AlertManager\Alerts\Processor($loop, $router)
+);
 $loop->run();
 ```
 

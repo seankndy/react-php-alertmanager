@@ -7,10 +7,7 @@ use SeanKndy\AlertManager\Routing\RoutableInterface;
 
 class Group implements RoutableInterface, \Countable
 {
-    /**
-     * @var \SplObjectStorage
-     */
-    private $receivers;
+    private \SplObjectStorage $receivers;
 
     public function __construct(array $receivers = [])
     {
@@ -20,7 +17,7 @@ class Group implements RoutableInterface, \Countable
     /**
      * {@inheritDoc}
      */
-    public function route(Alert $alert) : ?PromiseInterface
+    public function route(Alert $alert): ?PromiseInterface
     {
         $promises = [];
         foreach ($this->receivers as $receiver) {
@@ -36,19 +33,15 @@ class Group implements RoutableInterface, \Countable
      *
      * @return ReceivableInterface[]
      */
-    public function getReceivers()
+    public function getReceivers(): array
     {
         return \iterator_to_array($this->receivers);
     }
 
     /**
      * Set the value of $receivers
-     *
-     * @param ReceivableInterface[] $receivers
-     *
-     * @return self
      */
-    public function setReceivers(array $receivers)
+    public function setReceivers(array $receivers): self
     {
         $this->receivers = new \SplObjectStorage();
         foreach ($receivers as $r) {
@@ -60,12 +53,8 @@ class Group implements RoutableInterface, \Countable
 
     /**
      * Add a Receiver to group
-     *
-     * @param ReceivableInterface receiver
-     *
-     * @return self
      */
-    public function addReceiver(ReceivableInterface $receiver)
+    public function addReceiver(ReceivableInterface $receiver): self
     {
         $this->receivers->attach($receiver);
 
@@ -74,24 +63,16 @@ class Group implements RoutableInterface, \Countable
 
     /**
      * Check if Receiver in group
-     *
-     * @param ReceivableInterface $receiver
-     *
-     * @return bool
      */
-    public function hasReceiver(ReceivableInterface $receiver)
+    public function hasReceiver(ReceivableInterface $receiver): bool
     {
         return $this->receivers->contains($receiver);
     }
 
     /**
      * Remove Receiver from group
-     *
-     * @param ReceivableInterface $receiver
-     *
-     * @return self
      */
-    public function removeReceiver(ReceivableInterface $receiver)
+    public function removeReceiver(ReceivableInterface $receiver): self
     {
         $this->receivers->detach($receiver);
 
