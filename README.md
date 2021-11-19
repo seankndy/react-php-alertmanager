@@ -212,4 +212,4 @@ Note that both Scheduling and Filtering expect simple boolean return values, so 
 
 An alert preprocessor gives you the ability to process or act on every Alert prior to it being queued to the server.  A preprocessor has the ability to mutate any alert prior to queueing.  Every preprocessor pushed to the server will run in the order they were pushed, one after the next.
 
-You may develop your own alert pre-processers by implementing `\SeanKndy\AlertManager\Preprocessors\PreprocessorInterface` and then tell the server about it with `Server::pushPreprocessor($preprocessor)`.
+You may develop your own alert pre-processors by implementing `\SeanKndy\AlertManager\Preprocessors\PreprocessorInterface` and then tell the alert processor about it with `$alertProcess->pushPreprocessor($preprocessor)`.
