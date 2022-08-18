@@ -78,9 +78,12 @@ class Email extends AbstractReceiver
         return $deferred->promise();
     }
 
+    public function setEmailAddress($emailAddress)
+    {
+        $this->emailAddress = $emailAddress;
+    }
+
     /**
-     * Get the email address
-     *
      * @return string
      */
     public function getEmailAddress()
