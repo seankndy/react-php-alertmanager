@@ -286,17 +286,11 @@ class Alert
         return $this;
     }
 
-    /**
-     * Get the value of Attributes
-     */
     public function getAttributes(): array
     {
         return $this->attributes;
     }
 
-    /**
-     * Set the value of Expiry Duration
-     */
     public function setExpiryDuration(int $expiryDuration): self
     {
         $this->expiryDuration = $expiryDuration;
@@ -304,9 +298,6 @@ class Alert
         return $this;
     }
 
-    /**
-     * Get the value of Expiry Duration
-     */
     public function getExpiryDuration(): int
     {
         return $this->expiryDuration;
@@ -328,7 +319,7 @@ class Alert
      *
      * @return string
      */
-    public function __toString()
+    public function __toString(): string
     {
         return 'name='.$this->name.'; ' .
             'state='.$this->state.'; ' .

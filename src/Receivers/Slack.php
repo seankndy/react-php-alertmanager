@@ -2,7 +2,6 @@
 namespace SeanKndy\AlertManager\Receivers;
 
 use SeanKndy\AlertManager\Alerts\Alert;
-use SeanKndy\AlertManager\Alerts\ThrottledReceiverAlert;
 use SeanKndy\AlertManager\Support\Traits\ConfigTrait;
 use React\EventLoop\LoopInterface;
 use React\Promise\PromiseInterface;
@@ -14,10 +13,12 @@ class Slack extends AbstractReceiver
     use ConfigTrait;
 
     protected LoopInterface $loop;
+
     /**
      * Slack member ID (i.e. W1234567890)
      */
     protected string $memberId;
+
 
     public function __construct($id, LoopInterface $loop,
         string $memberId, array $config)
@@ -32,7 +33,7 @@ class Slack extends AbstractReceiver
         ], $config);
     }
 
-    public function receive(Alert $alert) : PromiseInterface
+    public function receive(Alert $alert): PromiseInterface
     {
         if (!$this->memberId || !$this->config['api_token'] || !$this->alertTemplate) {
             return \React\Promise\resolve([]);

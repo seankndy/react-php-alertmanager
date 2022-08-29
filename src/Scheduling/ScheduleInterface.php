@@ -12,5 +12,5 @@ interface ScheduleInterface
      *
      * @return bool
      */
-    public function isActive(int $atTime = 0) : bool;
+    public function isActive(int $atTime = 0): bool;
 }

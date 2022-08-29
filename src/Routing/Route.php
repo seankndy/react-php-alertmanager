@@ -57,7 +57,7 @@ class Route implements RoutableInterface
     /**
      * {@inheritDoc} Route Alert to destination
      */
-    public function route(Alert $alert) : ?PromiseInterface
+    public function route(Alert $alert): ?PromiseInterface
     {
         if (!$this->destination) {
             return \React\Promise\resolve([]);
