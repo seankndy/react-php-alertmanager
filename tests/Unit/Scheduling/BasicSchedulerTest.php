@@ -186,4 +186,38 @@ class BasicSchedulerTest extends TestCase
             (new \DateTime("Mar 2 2024 08:00:00", new \DateTimeZone("America/Denver")))->getTimestamp()
         ));
     }
+
+    /** @test */
+    public function it_doesnt_allow_start_time_less_than_end_time()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        new BasicSchedule(\time(), \time()-1, 'America/Denver');
+    }
+
+    /** @test */
+    public function it_doesnt_allow_start_time_equal_to_end_time()
+    {
+        $time = \time();
+
+        $this->expectException(\InvalidArgumentException::class);
+        new BasicSchedule($time, $time, 'America/Denver');
+    }
+
+    /** @test */
+    public function it_doesnt_allow_invalid_repeat_interval()
+    {
+        $schedule = new BasicSchedule(\time(), \time()+1, 'America/Denver');
+
+        $this->expectException(\InvalidArgumentException::class);
+        $schedule->setRepeatInterval(-1);
+    }
+
+    /** @test */
+    public function it_doesnt_allow_invalid_repeat_frequency()
+    {
+        $schedule = new BasicSchedule(\time(), \time()+1, 'America/Denver');
+
+        $this->expectException(\InvalidArgumentException::class);
+        $schedule->setRepeatFrequency(1234);
+    }
 }

@@ -1,13 +1,18 @@
 <?php
+
 namespace SeanKndy\AlertManager\Receivers;
 
 use React\Promise\PromiseInterface;
 use SeanKndy\AlertManager\Alerts\Alert;
 use SeanKndy\AlertManager\Routing\RoutableInterface;
+use SplObjectStorage;
 
+/**
+ * Route to several receivers.
+ */
 class Group implements RoutableInterface, \Countable
 {
-    private \SplObjectStorage $receivers;
+    private SplObjectStorage $receivers;
 
     /**
      * @param ReceivableInterface[] $receivers
@@ -25,6 +30,7 @@ class Group implements RoutableInterface, \Countable
                 $promises[] = $promise;
             }
         }
+
         return \count($promises) > 0 ? \React\Promise\all($promises) : null;
     }
 
@@ -43,7 +49,7 @@ class Group implements RoutableInterface, \Countable
      */
     public function setReceivers(array $receivers): self
     {
-        $this->receivers = new \SplObjectStorage();
+        $this->receivers = new SplObjectStorage();
         foreach ($receivers as $r) {
             $this->receivers->attach($r);
         }
@@ -83,6 +89,6 @@ class Group implements RoutableInterface, \Countable
         foreach ($this->receivers as $receiver) {
             $str .= "Receiver #" . ($i++) . ": [" . (string)$receiver . "]" . $sep;
         }
-        return rtrim($str, $sep);
+        return \rtrim($str, $sep);
     }
 }
