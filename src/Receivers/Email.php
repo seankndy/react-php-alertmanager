@@ -2,25 +2,18 @@
 namespace SeanKndy\AlertManager\Receivers;
 
 use SeanKndy\AlertManager\Alerts\Alert;
-use SeanKndy\AlertManager\Alerts\ThrottledReceiverAlert;
 use SeanKndy\AlertManager\Support\Traits\ConfigTrait;
 use React\EventLoop\LoopInterface;
 use React\Promise\PromiseInterface;
 use React\ChildProcess\Process;
-use Shuchkin\ReactSMTP\Client as SmtpClient;
 
 class Email extends AbstractReceiver
 {
     use ConfigTrait;
 
-    /**
-     * @var LoopInterface
-     */
-    protected $loop;
-    /**
-     * @var string
-     */
-    protected $emailAddress;
+    protected LoopInterface $loop;
+
+    protected string $emailAddress;
 
     public function __construct($id, LoopInterface $loop,
         string $emailAddress, array $config)
@@ -40,10 +33,7 @@ class Email extends AbstractReceiver
         ], $config);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public function receive(Alert $alert) : PromiseInterface
+    public function receive(Alert $alert): PromiseInterface
     {
         if (!$this->emailAddress || !$this->alertTemplate) {
             return \React\Promise\resolve([]);
@@ -78,20 +68,17 @@ class Email extends AbstractReceiver
         return $deferred->promise();
     }
 
-    public function setEmailAddress($emailAddress)
+    public function setEmailAddress($emailAddress): void
     {
         $this->emailAddress = $emailAddress;
     }
 
-    /**
-     * @return string
-     */
-    public function getEmailAddress()
+    public function getEmailAddress(): string
     {
         return $this->emailAddress;
     }
 
-    public function __toString()
+    public function __toString(): string
     {
         return parent::__toString() . '; ' .
             'email=' . $this->emailAddress;

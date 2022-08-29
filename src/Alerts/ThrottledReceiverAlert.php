@@ -1,8 +1,7 @@
 <?php
+
 namespace SeanKndy\AlertManager\Alerts;
 
-use React\Promise\PromiseInterface;
-use SeanKndy\AlertManager\Receivers\AbstractReceiver;
 /**
  * Alert representing that a Receiver has been throttled.
  */

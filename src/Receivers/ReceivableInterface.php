@@ -4,6 +4,7 @@ namespace SeanKndy\AlertManager\Receivers;
 use SeanKndy\AlertManager\Alerts\Alert;
 use SeanKndy\AlertManager\Routing\RoutableInterface;
 use React\Promise\PromiseInterface;
+
 /**
  * A ReceivableInterface is a type of RoutableInterface that should 'handle'
  * the Alert rather than deferring/routing to another routable.

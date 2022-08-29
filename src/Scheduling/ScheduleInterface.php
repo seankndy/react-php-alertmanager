@@ -1,4 +1,5 @@
 <?php
+
 namespace SeanKndy\AlertManager\Scheduling;
 
 interface ScheduleInterface

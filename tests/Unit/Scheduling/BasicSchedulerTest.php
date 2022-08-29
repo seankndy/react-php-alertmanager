@@ -8,7 +8,7 @@ use SeanKndy\AlertManager\Scheduling\BasicSchedule;
 class BasicSchedulerTest extends TestCase
 {
     /** @test */
-    public function it_returns_true_when_time_given_falls_between_start_and_end_time()
+    public function it_is_active_when_time_given_falls_between_start_and_end_time()
     {
         $startDate = new \DateTime("Aug 21 1987 08:00:00", new \DateTimeZone("America/Denver"));
         $endDate = new \DateTime("Aug 21 1987 11:00:00", new \DateTimeZone("America/Denver"));
@@ -23,7 +23,7 @@ class BasicSchedulerTest extends TestCase
     }
 
     /** @test */
-    public function it_returns_false_when_time_given_falls_outside_start_and_end_time()
+    public function it_is_not_active_when_time_given_falls_outside_start_and_end_time()
     {
         $startDate = new \DateTime("Aug 21 1987 08:00:00", new \DateTimeZone("America/Denver"));
         $endDate = new \DateTime("Aug 21 1987 11:00:00", new \DateTimeZone("America/Denver"));
@@ -39,7 +39,7 @@ class BasicSchedulerTest extends TestCase
     }
 
     /** @test */
-    public function it_returns_true_when_time_given_falls_between_start_and_end_time_with_future_daily_interval()
+    public function it_is_active_when_time_given_falls_between_start_and_end_time_with_future_daily_interval()
     {
         $startDate = new \DateTime("Aug 21 1987 08:00:00", new \DateTimeZone("America/Denver"));
         $endDate = new \DateTime("Aug 21 1987 11:00:00", new \DateTimeZone("America/Denver"));
@@ -58,7 +58,7 @@ class BasicSchedulerTest extends TestCase
     }
 
     /** @test */
-    public function it_returns_false_when_time_given_falls_outside_start_and_end_time_with_future_daily_interval()
+    public function it_is_not_active_when_time_given_falls_outside_start_and_end_time_with_future_daily_interval()
     {
         $startDate = new \DateTime("Aug 21 1987 08:00:00", new \DateTimeZone("America/Denver"));
         $endDate = new \DateTime("Aug 21 1987 11:00:00", new \DateTimeZone("America/Denver"));
@@ -73,7 +73,7 @@ class BasicSchedulerTest extends TestCase
     }
 
     /** @test */
-    public function it_returns_true_when_time_given_falls_between_start_and_end_time_with_future_weekly_interval()
+    public function it_is_active_when_time_given_falls_between_start_and_end_time_with_future_weekly_interval()
     {
         $startDate = new \DateTime("Aug 21 1987 08:00:00", new \DateTimeZone("America/Denver"));
         $endDate = new \DateTime("Aug 21 1987 11:00:00", new \DateTimeZone("America/Denver"));
@@ -91,7 +91,7 @@ class BasicSchedulerTest extends TestCase
     }
 
     /** @test */
-    public function it_returns_true_when_time_given_falls_between_start_and_end_time_with_a_truly_future_weekly_interval()
+    public function it_is_active_when_time_given_falls_between_start_and_end_time_with_a_truly_future_weekly_interval()
     {
         // test into the real future relative to the time this test runs
 
@@ -110,7 +110,7 @@ class BasicSchedulerTest extends TestCase
     }
 
     /** @test */
-    public function it_returns_false_when_time_given_falls_outside_start_and_end_time_with_future_weekly_interval()
+    public function it_is_not_active_when_time_given_falls_outside_start_and_end_time_with_future_weekly_interval()
     {
         $startDate = new \DateTime("Aug 21 1987 08:00:00", new \DateTimeZone("America/Denver"));
         $endDate = new \DateTime("Aug 21 1987 11:00:00", new \DateTimeZone("America/Denver"));

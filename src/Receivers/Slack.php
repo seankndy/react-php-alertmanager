@@ -13,15 +13,11 @@ class Slack extends AbstractReceiver
 {
     use ConfigTrait;
 
-    /**
-     * @var LoopInterface
-     */
-    protected $loop;
+    protected LoopInterface $loop;
     /**
      * Slack member ID (i.e. W1234567890)
-     * @var string
      */
-    protected $memberId;
+    protected string $memberId;
 
     public function __construct($id, LoopInterface $loop,
         string $memberId, array $config)
@@ -36,9 +32,6 @@ class Slack extends AbstractReceiver
         ], $config);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function receive(Alert $alert) : PromiseInterface
     {
         if (!$this->memberId || !$this->config['api_token'] || !$this->alertTemplate) {
@@ -81,10 +74,8 @@ class Slack extends AbstractReceiver
      *
      * @param string $url
      * @param array $params Payload
-     *
-     * @return PromiseInterface
      */
-    private function asyncHttpPost(string $url, array $params)
+    private function asyncHttpPost(string $url, array $params): PromiseInterface
     {
         $deferred = new \React\Promise\Deferred();
 
@@ -127,17 +118,17 @@ class Slack extends AbstractReceiver
         return $deferred->promise();
     }
 
-    /**
-     * Get the memberId
-     *
-     * @return string
-     */
-    public function getMemberId()
+    public function getMemberId(): string
     {
         return $this->memberId;
     }
 
-    public function __toString()
+    public function setMemberId(string $memberId): void
+    {
+        $this->memberId = $memberId;
+    }
+
+    public function __toString(): string
     {
         return parent::__toString() . '; ' .
             'slack-member-id=' . $this->memberId;

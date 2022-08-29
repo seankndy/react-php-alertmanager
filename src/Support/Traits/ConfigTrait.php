@@ -1,43 +1,30 @@
 <?php
+
 namespace SeanKndy\AlertManager\Support\Traits;
 
 trait ConfigTrait
 {
-    protected $config;
+    protected array $config = [];
 
     /**
      * Set a single configuration item
      *
      * @param string $key Key of config item
-     * @Param mixed $val Value of config item
-     *
-     * @return self
+     * @param mixed $val Value of config item
      */
-    public function setConfigItem($key, $val)
+    public function setConfigItem(string $key, $val): self
     {
         $this->config[$key] = $val;
 
         return $this;
     }
 
-    /**
-     * Get config array
-     *
-     * @return array
-     */
-    public function getConfig()
+    public function getConfig(): array
     {
         return $this->config;
     }
 
-    /**
-     * Set config array
-     *
-     * @param array $config
-     *
-     * @return self
-     */
-    public function setConfig(array $config)
+    public function setConfig(array $config): self
     {
         $this->config = $config;
 

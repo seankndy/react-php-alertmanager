@@ -1,10 +1,10 @@
 <?php
 namespace SeanKndy\AlertManager\Routing;
 
-use React\EventLoop\LoopInterface;
 use React\Promise\PromiseInterface;
 use SeanKndy\AlertManager\Alerts\Alert;
 use Evenement\EventEmitter;
+
 /**
  * Router is simply a collection of Routes that by default will
  * attempt to route to each one and upon successfully routing, stop any further
@@ -152,7 +152,7 @@ class Router extends EventEmitter implements RoutableInterface, \Countable
         return \count($this->routes);
     }
 
-    public function __toString()
+    public function __toString(): string
     {
         $i = 1;
         $sep = ' -- ';
@@ -160,6 +160,6 @@ class Router extends EventEmitter implements RoutableInterface, \Countable
         foreach ($this->routes as $route) {
             $str .= "(Routable #" . ($i++) . ": [" . (string)$route . "]" . $sep;
         }
-        return rtrim($str, $sep);
+        return \rtrim($str, $sep);
     }
 }

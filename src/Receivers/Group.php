@@ -9,14 +9,14 @@ class Group implements RoutableInterface, \Countable
 {
     private \SplObjectStorage $receivers;
 
+    /**
+     * @param ReceivableInterface[] $receivers
+     */
     public function __construct(array $receivers = [])
     {
         $this->setReceivers($receivers);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function route(Alert $alert): ?PromiseInterface
     {
         $promises = [];
@@ -29,7 +29,7 @@ class Group implements RoutableInterface, \Countable
     }
 
     /**
-     * Get the value of Receivers
+     * Get all receivers in group as an array.
      *
      * @return ReceivableInterface[]
      */
@@ -39,7 +39,7 @@ class Group implements RoutableInterface, \Countable
     }
 
     /**
-     * Set the value of $receivers
+     * @param ReceivableInterface[] $receivers
      */
     public function setReceivers(array $receivers): self
     {
@@ -51,9 +51,6 @@ class Group implements RoutableInterface, \Countable
         return $this;
     }
 
-    /**
-     * Add a Receiver to group
-     */
     public function addReceiver(ReceivableInterface $receiver): self
     {
         $this->receivers->attach($receiver);
@@ -61,17 +58,11 @@ class Group implements RoutableInterface, \Countable
         return $this;
     }
 
-    /**
-     * Check if Receiver in group
-     */
     public function hasReceiver(ReceivableInterface $receiver): bool
     {
         return $this->receivers->contains($receiver);
     }
 
-    /**
-     * Remove Receiver from group
-     */
     public function removeReceiver(ReceivableInterface $receiver): self
     {
         $this->receivers->detach($receiver);
@@ -79,17 +70,12 @@ class Group implements RoutableInterface, \Countable
         return $this;
     }
 
-    /**
-     * Countable implementation
-     *
-     * @return int
-     */
-    public function count()
+    public function count(): int
     {
         return \count($this->receivers);
     }
 
-    public function __toString()
+    public function __toString(): string
     {
         $i = 1;
         $sep = ' -- ';

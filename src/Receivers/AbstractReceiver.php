@@ -7,6 +7,7 @@ use SeanKndy\AlertManager\Alerts\TemplateInterface;
 use SeanKndy\AlertManager\Scheduling\ScheduleInterface;
 use React\Promise\PromiseInterface;
 use Ramsey\Uuid\Uuid;
+
 /**
  * Provides a base set of Receiver functions such as scheduling, repeat intervals,
  * alert delays and filtering.
@@ -22,26 +23,22 @@ abstract class AbstractReceiver implements ReceivableInterface
     /**
      * ScheduleInterface determining when the receiver is active
      * An empty schedule means always on-call/active
-     * @var \SplObjectStorage
      */
-    protected $schedules = null;
+    protected ?\SplObjectStorage $schedules = null;
     /**
      * ScheduleInterface determining when the receiver should NOT be active
      * If any schedule here is active then it overrides the above schedules.
-     * @var \SplObjectStorage
      */
-    protected $exclusionSchedules = null;
+    protected ?\SplObjectStorage $exclusionSchedules = null;
     /**
      * How many seconds after initial notify to continually re-notify
      * (if state != ACKNOWLEDGED)
-     * @var int
      */
-    protected $repeatInterval = 86400;
+    protected int $repeatInterval = 86400;
     /**
      * Receive recovered alerts?
-     * @var bool
      */
-    protected $receiveRecoveries = true;
+    protected bool $receiveRecoveries = true;
     /**
      * Alert delay - initial time for receiver to refuse an alert
      *  0 = disabled
@@ -49,17 +46,14 @@ abstract class AbstractReceiver implements ReceivableInterface
      * -1 = special flag meaning until the Alert's updated time is newer than
      *      it's created time, the alert remains un-receivable.
      *
-     * @var int
      */
-    protected $alertDelay = -1;
+    protected int $alertDelay = -1;
     /**
-     * @var \SplObjectStorage
+     * Filters for this receiver.
      */
-    protected $filters = null;
-    /**
-     * @var TemplateInterface
-     */
-    protected $alertTemplate = null;
+    protected ?\SplObjectStorage $filters = null;
+
+    protected ?TemplateInterface $alertTemplate = null;
 
     public function __construct($id = null)
     {
@@ -76,7 +70,7 @@ abstract class AbstractReceiver implements ReceivableInterface
     /**
      * {@inheritDoc}
      */
-    public function route(Alert $alert) : ?PromiseInterface
+    public function route(Alert $alert): ?PromiseInterface
     {
         if (!$this->isReceivable($alert)) {
             return null;
@@ -87,7 +81,7 @@ abstract class AbstractReceiver implements ReceivableInterface
     /**
      * {@inheritDoc}
      */
-    public function isReceivable(Alert $alert) : bool
+    public function isReceivable(Alert $alert): bool
     {
         // never receive alerts if off schedule
         if (!$this->isActivelyScheduled()) {
@@ -141,17 +135,12 @@ abstract class AbstractReceiver implements ReceivableInterface
         return false;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function receiverId()
     {
         return $this->id;
     }
 
     /**
-     * Get the value of ID
-     *
      * @return mixed
      */
     public function getId()
@@ -160,62 +149,37 @@ abstract class AbstractReceiver implements ReceivableInterface
     }
 
     /**
-     * Set the value of ID
-     *
      * @param mixed $id
-     *
-     * @return self
      */
-    public function setId($id)
+    public function setId($id): self
     {
         $this->id = $id;
 
         return $this;
     }
 
-    /**
-     * Add ScheduleInterface for this Receiver
-     *
-     * @return self
-     */
-    public function addSchedule(ScheduleInterface $schedule)
+    public function addSchedule(ScheduleInterface $schedule): self
     {
         $this->schedules->attach($schedule);
 
         return $this;
     }
 
-
-    /**
-     * Add ScheduleInterface (exclusion) for this Receiver
-     *
-     * @return self
-     */
-    public function addExclusionSchedule(ScheduleInterface $schedule)
+    public function addExclusionSchedule(ScheduleInterface $schedule): self
     {
         $this->exclusionSchedules->attach($schedule);
 
         return $this;
     }
 
-    /**
-     * Remove ScheduleInterface
-     *
-     * @return self
-     */
-    public function removeSchedule(ScheduleInterface $schedule)
+    public function removeSchedule(ScheduleInterface $schedule): self
     {
         $this->schedules->detach($schedule);
 
         return $this;
     }
 
-    /**
-     * Remove ScheduleInterface (exclusion)
-     *
-     * @return self
-     */
-    public function removeExclusionSchedule(ScheduleInterface $schedule)
+    public function removeExclusionSchedule(ScheduleInterface $schedule): self
     {
         $this->exclusionSchedules->detach($schedule);
 
@@ -223,13 +187,11 @@ abstract class AbstractReceiver implements ReceivableInterface
     }
 
     /**
-     * Set all schedules via an array
+     * Set all schedules with an array
      *
-     * @param ScheduleInterface[] schedules
-     *
-     * @return self
+     * @param ScheduleInterface[] $schedules
      */
-    public function setSchedules(array $schedules)
+    public function setSchedules(array $schedules): self
     {
         $this->schedules = new \SplObjectStorage();
         foreach ($schedules as $schedule) {
@@ -243,10 +205,8 @@ abstract class AbstractReceiver implements ReceivableInterface
      * Set all exclusion schedules via an array
      *
      * @param ScheduleInterface[] schedules
-     *
-     * @return self
      */
-    public function setExclusionSchedules(array $schedules)
+    public function setExclusionSchedules(array $schedules): self
     {
         $this->exclusionSchedules = new \SplObjectStorage();
         foreach ($schedules as $schedule) {
@@ -257,11 +217,11 @@ abstract class AbstractReceiver implements ReceivableInterface
     }
 
     /**
-     * Get the value of Schedules determing when the receiver is active
+     * Get all schedules as an array.
      *
      * @return ScheduleInterface[]
      */
-    public function getSchedules()
+    public function getSchedules(): array
     {
         return \iterator_to_array($this->schedules);
     }
@@ -271,64 +231,39 @@ abstract class AbstractReceiver implements ReceivableInterface
      *
      * @return ScheduleInterface[]
      */
-    public function getExclusionSchedules()
+    public function getExclusionSchedules(): array
     {
         return \iterator_to_array($this->exclusionSchedules);
     }
 
-    /**
-     * Set the value of repeat interval
-     *
-     * @param int repeatInterval
-     *
-     * @return self
-     */
-    public function setRepeatInterval(int $repeatInterval)
+    public function setRepeatInterval(int $repeatInterval): self
     {
         $this->repeatInterval = $repeatInterval;
 
         return $this;
     }
 
-    /**
-     * Get the value of repeat interval
-     * @return int
-     */
-    public function getRepeatInterval()
+    public function getRepeatInterval(): int
     {
         return $this->repeatInterval;
     }
 
-    /**
-     * Set the value of receive recoveries
-     *
-     * @param bool receiveRecoveries
-     *
-     * @return self
-     */
-    public function setReceiveRecoveries(bool $flag)
+    public function setReceiveRecoveries(bool $flag): self
     {
         $this->receiveRecoveries = $flag;
 
         return $this;
     }
 
-    /**
-     * Get the value of Send recoveries
-     *
-     * @return bool
-     */
-    public function receiveRecoveries()
+    public function receiveRecoveries(): bool
     {
         return $this->receiveRecoveries;
     }
 
     /**
      * Determine if this receiver is currently on-call/scheduled.
-     *
-     * @return bool
      */
-    public function isActivelyScheduled()
+    public function isActivelyScheduled(): bool
     {
         // first check if any exclusion schedules are active.
         // if they are, then user is not active.
@@ -355,64 +290,33 @@ abstract class AbstractReceiver implements ReceivableInterface
         return false;
     }
 
-    /**
-     * Set the value of Alert delay
-     *
-     * @param int alertDelay
-     *
-     * @return self
-     */
-    public function setAlertDelay(int $alertDelay)
+    public function setAlertDelay(int $alertDelay): self
     {
         $this->alertDelay = $alertDelay;
 
         return $this;
     }
 
-    /**
-     * Get the value of Alert delay
-     *
-     * @return int
-     */
-    public function getAlertDelay()
+    public function getAlertDelay(): int
     {
         return $this->alertDelay;
     }
 
-    /**
-     * Add FilterInterface
-     *
-     * @param FilterInterface $filter
-     *
-     * @return self
-     */
-    public function addFilter(FilterInterface $filter)
+    public function addFilter(FilterInterface $filter): self
     {
         $this->filters->attach($filter);
 
         return $this;
     }
 
-    /**
-     * Remove FilterInterface
-     *
-     * @param FilterInterface $filter Filter to remove
-     *
-     * @return self
-     */
-    public function removeFilter(FilterInterface $filter)
+    public function removeFilter(FilterInterface $filter): self
     {
         $this->filters->detach($filter);
 
         return $this;
     }
 
-    /**
-     * Clear filters
-     *
-     * @return self
-     */
-    public function clearFilters()
+    public function clearFilters(): self
     {
         $this->filters = new \SplObjectStorage();
 
@@ -420,45 +324,28 @@ abstract class AbstractReceiver implements ReceivableInterface
     }
 
     /**
-     * Get the filters for this receiver
+     * Get the filters as an array.
      *
      * @return FilterInterface[]
      */
-    public function getFilters()
+    public function getFilters(): array
     {
         return \iterator_to_array($this->filters);
     }
 
-    /**
-     * Set the value of $alertTemplate
-     *
-     * @param TemplateInterface $alertTemplate
-     *
-     * @return self
-     */
-    public function setAlertTemplate(TemplateInterface $alertTemplate)
+    public function setAlertTemplate(?TemplateInterface $alertTemplate): self
     {
         $this->alertTemplate = $alertTemplate;
 
         return $this;
     }
 
-    /**
-     * Get the value of $alertTemplate
-     *
-     * @return TemplateInterface
-     */
-    public function getAlertTemplate()
+    public function getAlertTemplate(): ?TemplateInterface
     {
         return $this->alertTemplate;
     }
 
-    /**
-     * String representation
-     *
-     * @return string
-     */
-    public function __toString()
+    public function __toString(): string
     {
         return 'id=' . $this->id . '; num-schedules=' . \count($this->schedules) . '; ' .
             'num-exclusion-schedules=' . \count($this->exclusionSchedules) . '; ' .

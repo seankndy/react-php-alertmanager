@@ -1,5 +1,7 @@
 <?php
+
 namespace SeanKndy\AlertManager\Scheduling;
+
 /**
  * Basic scheduling that supports daily or weekly repetition.
  *
@@ -14,27 +16,27 @@ class BasicSchedule implements ScheduleInterface
      * Start of schedule, EPOCH timestamp
      * @var int
      */
-    private $startTime;
+    private int $startTime;
     /**
      * End of schedule, EPOCH timestamp
      * @var int
      */
-    private $endTime;
+    private int $endTime;
     /**
      * Timezone in which we're operating.
      * @var \DateTimeZone
      */
-    private $timezone;
+    private \DateTimeZone $timezone;
     /**
      * Repeat frequency, FREQ_NONE, FREQ_DAILY or FREQ_WEEKLY
      * @var int
      */
-    private $repeatFrequency = self::FREQ_NONE;
+    private int $repeatFrequency = self::FREQ_NONE;
     /**
      * Repeat interval for the above frequency
      * @var int
      */
-    private $repeatInterval = 0;
+    private int $repeatInterval = 0;
 
 
     public function __construct(int $startTime, int $endTime, $timezone)

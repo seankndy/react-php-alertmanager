@@ -1,4 +1,5 @@
 <?php
+
 namespace SeanKndy\AlertManager\Alerts;
 
 use SeanKndy\AlertManager\Routing\RoutableInterface;
