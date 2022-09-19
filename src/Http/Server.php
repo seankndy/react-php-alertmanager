@@ -31,14 +31,13 @@ class Server extends EventEmitter
         LoopInterface $loop,
         string $listen,
         AuthorizerInterface $authorizer,
-        Router $alertRouter
+        Processor $alertProcessor
     ) {
         $this->loop = $loop;
         $this->authorizer = $authorizer;
 
-        $processor = new Processor($loop, $alertRouter);
         $apis = [
-            new Api\V1\Alerts($processor)
+            new Api\V1\Alerts($alertProcessor)
         ];
 
         $this->http = new ReactHttpServer(fn(ServerRequestInterface $request) => $this->handleRequest($request));
