@@ -1,4 +1,5 @@
 <?php
+
 namespace SeanKndy\AlertManager\Routing;
 
 use SeanKndy\AlertManager\Alerts\Alert;
@@ -8,20 +9,20 @@ class Criteria
     const AND = 'AND';
     const OR  = 'OR';
 
-    private array $criteria = [];
+    private array $criteria;
 
-    private string $logic = self::AND;
+    private string $logic;
 
     public function __construct(string $logic = self::AND)
     {
+        $this->criteria = [];
         $this->logic = $logic;
     }
 
     /**
      * Add criteria
      *
-     * @param string|Criteria $key Either attribute key or another
-     *      Criteria
+     * @param string|Criteria $key Either attribute key or another Criteria
      * @param mixed $match Value for $key to match or null if key is Criteria
      */
     public function add($key, $match = null): self
@@ -91,7 +92,7 @@ class Criteria
     }
 
     /**
-     * Does $alert match this Criteria?
+     * Does $alert match $this Criteria?
      */
     public function matches(Alert $alert): bool
     {

@@ -11,6 +11,8 @@ use React\Promise\PromiseInterface;
 use React\Socket\SocketServer;
 use SeanKndy\AlertManager\Alerts\Processor;
 use SeanKndy\AlertManager\Auth\AuthorizerInterface;
+use SeanKndy\AlertManager\Http\Api;
+use SeanKndy\AlertManager\Routing\Router;
 
 class Server extends EventEmitter
 {
@@ -29,26 +31,28 @@ class Server extends EventEmitter
         LoopInterface $loop,
         string $listen,
         AuthorizerInterface $authorizer,
-        Processor $alertProcessor
+        Router $alertRouter
     ) {
         $this->loop = $loop;
         $this->authorizer = $authorizer;
+
+        $processor = new Processor($loop, $alertRouter);
+        $apis = [
+            new Api\V1\Alerts($processor)
+        ];
 
         $this->http = new ReactHttpServer(fn(ServerRequestInterface $request) => $this->handleRequest($request));
         $this->http->on('error', fn($e) => $this->emit('error', [$e]));
         $socket = new SocketServer($listen, [], $this->loop);
         $this->http->listen($socket);
 
-        $alertsApi = new Api\V1\Alerts($alertProcessor);
-        $this->routeDispatcher = \FastRoute\simpleDispatcher(
-            function(\FastRoute\RouteCollector $r) use ($alertsApi) {
-                $r->addGroup('/api/v1', function (\FastRoute\RouteCollector $r) use ($alertsApi) {
-                    $r->addRoute('GET', '/alerts', [$alertsApi, 'get']);
-                    $r->addRoute('POST', '/alerts', [$alertsApi, 'create']);
-                    $r->addRoute('POST', '/alerts/quiesce', [$alertsApi, 'quiesce']);
-                });
-            }
-        );
+        $this->routeDispatcher = \FastRoute\simpleDispatcher(function(\FastRoute\RouteCollector $r) use ($apis) {
+            $r->addGroup('/api/v1', function (\FastRoute\RouteCollector $r) use ($apis) {
+                foreach ($apis as $api) {
+                    $api->defineRoutes($r);
+                }
+            });
+        });
     }
 
     /**
@@ -74,11 +78,10 @@ class Server extends EventEmitter
                     \json_encode(['status' => 'error'])
                 );
             case \FastRoute\Dispatcher::FOUND:
-                if ($this->authorizer) {
-                    $authPromise = $this->authorizer->authorize($request);
-                } else {
-                    $authPromise = \React\Promise\resolve(true);
-                }
+                $authPromise = $this->authorizer
+                    ? $this->authorizer->authorize($request)
+                    : \React\Promise\resolve(true);
+
                 return $authPromise->then(function (bool $authenticated) use ($request, $routeInfo) {
                     if (!$authenticated) {
                         return new HttpResponse(

@@ -1,19 +1,28 @@
 <?php
+
 namespace SeanKndy\AlertManager\Http\Api\V1;
 
 use React\Promise\PromiseInterface;
 use SeanKndy\AlertManager\Alerts\Alert;
 use SeanKndy\AlertManager\Alerts\Processor;
+use SeanKndy\AlertManager\Http\Api\DefinesRoutes;
 use Psr\Http\Message\ServerRequestInterface;
 use React\Http\Response as HttpResponse;
 
-class Alerts
+class Alerts implements DefinesRoutes
 {
     protected Processor $processor;
 
     public function __construct(Processor $processor)
     {
         $this->processor = $processor;
+    }
+
+    public function defineRoutes(\FastRoute\RouteCollector $routeCollector): void
+    {
+        $routeCollector->addRoute('GET', '/alerts', [$this, 'get']);
+        $routeCollector->addRoute('POST', '/alerts', [$this, 'create']);
+        $routeCollector->addRoute('POST', '/alerts/quiesce', [$this, 'quiesce']);
     }
 
     /**

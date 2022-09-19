@@ -93,7 +93,7 @@ $router = (new Router())->addRoutes([
 $server = new \SeanKndy\AlertManager\Http\Server(
     $loop,
     '0.0.0.0:8514',
-    new \SeanKndy\AlertManager\Alerts\Processor($loop, $router)
+    $router
 );
 $loop->run();
 ```
