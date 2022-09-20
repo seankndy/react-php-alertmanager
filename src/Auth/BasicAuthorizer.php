@@ -7,15 +7,19 @@ use React\Promise\PromiseInterface;
 class BasicAuthorizer implements AuthorizerInterface
 {
     /**
-     * [user=>password]
-     * @var array
+     * Array of users and passwords ( [user => password] )
      */
-    private $users = [];
+    private array $users;
+
+    public function __construct(array $users = [])
+    {
+        $this->users = $users;
+    }
 
     /**
      * {@inheritDoc} Basic HTTP authentication with users authed from an array.
      */
-    public function authorize(ServerRequestInterface $request) : PromiseInterface
+    public function authorize(ServerRequestInterface $request): PromiseInterface
     {
         $authorizationHeader = $request->getHeaderLine('Authorization');
         if (strpos($authorizationHeader, ' ') === false) {
@@ -35,24 +39,12 @@ class BasicAuthorizer implements AuthorizerInterface
         return \React\Promise\resolve(true);
     }
 
-    /**
-     * Get the value of [user=>password]
-     *
-     * @return array
-     */
-    public function getUsers()
+    public function getUsers(): array
     {
         return $this->users;
     }
 
-    /**
-     * Set the value of [user=>password]
-     *
-     * @param array users
-     *
-     * @return self
-     */
-    public function setUsers(array $users)
+    public function setUsers(array $users): self
     {
         $this->users = $users;
 

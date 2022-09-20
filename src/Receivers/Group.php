@@ -1,26 +1,28 @@
 <?php
+
 namespace SeanKndy\AlertManager\Receivers;
 
 use React\Promise\PromiseInterface;
 use SeanKndy\AlertManager\Alerts\Alert;
 use SeanKndy\AlertManager\Routing\RoutableInterface;
+use SplObjectStorage;
 
+/**
+ * Route to several receivers.
+ */
 class Group implements RoutableInterface, \Countable
 {
-    /**
-     * @var \SplObjectStorage
-     */
-    private $receivers;
+    private SplObjectStorage $receivers;
 
+    /**
+     * @param ReceivableInterface[] $receivers
+     */
     public function __construct(array $receivers = [])
     {
         $this->setReceivers($receivers);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public function route(Alert $alert) : ?PromiseInterface
+    public function route(Alert $alert): ?PromiseInterface
     {
         $promises = [];
         foreach ($this->receivers as $receiver) {
@@ -28,29 +30,26 @@ class Group implements RoutableInterface, \Countable
                 $promises[] = $promise;
             }
         }
+
         return \count($promises) > 0 ? \React\Promise\all($promises) : null;
     }
 
     /**
-     * Get the value of Receivers
+     * Get all receivers in group as an array.
      *
      * @return ReceivableInterface[]
      */
-    public function getReceivers()
+    public function getReceivers(): array
     {
         return \iterator_to_array($this->receivers);
     }
 
     /**
-     * Set the value of $receivers
-     *
      * @param ReceivableInterface[] $receivers
-     *
-     * @return self
      */
-    public function setReceivers(array $receivers)
+    public function setReceivers(array $receivers): self
     {
-        $this->receivers = new \SplObjectStorage();
+        $this->receivers = new SplObjectStorage();
         foreach ($receivers as $r) {
             $this->receivers->attach($r);
         }
@@ -58,57 +57,31 @@ class Group implements RoutableInterface, \Countable
         return $this;
     }
 
-    /**
-     * Add a Receiver to group
-     *
-     * @param ReceivableInterface receiver
-     *
-     * @return self
-     */
-    public function addReceiver(ReceivableInterface $receiver)
+    public function addReceiver(ReceivableInterface $receiver): self
     {
         $this->receivers->attach($receiver);
 
         return $this;
     }
 
-    /**
-     * Check if Receiver in group
-     *
-     * @param ReceivableInterface $receiver
-     *
-     * @return bool
-     */
-    public function hasReceiver(ReceivableInterface $receiver)
+    public function hasReceiver(ReceivableInterface $receiver): bool
     {
         return $this->receivers->contains($receiver);
     }
 
-    /**
-     * Remove Receiver from group
-     *
-     * @param ReceivableInterface $receiver
-     *
-     * @return self
-     */
-    public function removeReceiver(ReceivableInterface $receiver)
+    public function removeReceiver(ReceivableInterface $receiver): self
     {
         $this->receivers->detach($receiver);
 
         return $this;
     }
 
-    /**
-     * Countable implementation
-     *
-     * @return int
-     */
-    public function count()
+    public function count(): int
     {
         return \count($this->receivers);
     }
 
-    public function __toString()
+    public function __toString(): string
     {
         $i = 1;
         $sep = ' -- ';
@@ -116,6 +89,6 @@ class Group implements RoutableInterface, \Countable
         foreach ($this->receivers as $receiver) {
             $str .= "Receiver #" . ($i++) . ": [" . (string)$receiver . "]" . $sep;
         }
-        return rtrim($str, $sep);
+        return \rtrim($str, $sep);
     }
 }

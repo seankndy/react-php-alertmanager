@@ -1,50 +1,41 @@
 <?php
-namespace SeanKndy\AlertManager\Api\V1;
 
+namespace SeanKndy\AlertManager\Http\Api\V1;
+
+use React\Promise\PromiseInterface;
 use SeanKndy\AlertManager\Alerts\Alert;
-use SeanKndy\AlertManager\Server;
+use SeanKndy\AlertManager\Alerts\Processor;
+use SeanKndy\AlertManager\Http\Api\DefinesRoutes;
 use Psr\Http\Message\ServerRequestInterface;
 use React\Http\Response as HttpResponse;
 
-class Alerts
+class Alerts implements DefinesRoutes
 {
-    /**
-     * @var Server
-     */
-    protected $server;
-    /**
-     * @var int
-     */
-    private $defaultExpiryDuration = 600; // 10min
+    protected Processor $processor;
 
-
-    public function __construct(Server $server)
+    public function __construct(Processor $processor)
     {
-        $this->server = $server;
+        $this->processor = $processor;
     }
 
-    public function setDefaultExpiryDuration(int $duration)
+    public function defineRoutes(\FastRoute\RouteCollector $routeCollector): void
     {
-        $this->defaultExpiryDuration = $duration;
-
-        return $this;
+        $routeCollector->addRoute('GET', '/alerts', [$this, 'get']);
+        $routeCollector->addRoute('POST', '/alerts', [$this, 'create']);
+        $routeCollector->addRoute('POST', '/alerts/quiesce', [$this, 'quiesce']);
     }
 
     /**
      * Get queued alerts
-     *
-     * @param ServerRequestInterface $request
-     *
-     * @return HttpResponse
      */
-    public function get(ServerRequestInterface $request)
+    public function get(ServerRequestInterface $request): HttpResponse
     {
         $queryParams = $request->getQueryParams();
         $receiverId = $queryParams['receiverId'] ?? null;
         $state = $queryParams['state'] ?? null;
 
         $alertArray = [];
-        foreach ($this->server->getQueuedAlerts() as $alert) {
+        foreach ($this->processor as $alert) {
             // filter by state
             if ($state && $state != $alert->getState()) {
                 continue;
@@ -75,8 +66,6 @@ class Alerts
     /**
      * Create and queue alert(s)
      *
-     * @param ServerRequestInterface $request
-     *
      * @return HttpResponse|PromiseInterface<HttpResponse>
      */
     public function create(ServerRequestInterface $request)
@@ -84,10 +73,7 @@ class Alerts
         // build Alerts from request body
 
         try {
-            $alerts = Alert::fromJSON(
-                (string)$request->getBody(),
-                $this->defaultExpiryDuration
-            );
+            $alerts = Alert::fromJSON((string)$request->getBody());
         } catch (\Throwable $e) {
             return new HttpResponse(
                 400,
@@ -99,7 +85,7 @@ class Alerts
         // queue alerts
         $promises = [];
         foreach ($alerts as $alert) {
-            $promises[] = $this->server->queueAlert($alert);
+            $promises[] = $this->processor->add($alert);
         }
 
         return \React\Promise\all($promises)->then(function() {
@@ -119,12 +105,8 @@ class Alerts
 
     /**
      * Quiet alert routing
-     *
-     * @param ServerRequestInterface $request
-     *
-     * @return HttpResponse
      */
-    public function quiesce(ServerRequestInterface $request)
+    public function quiesce(ServerRequestInterface $request): HttpResponse
     {
         $body = (string)$request->getBody();
         $parsedBody = \json_decode($body);
@@ -137,7 +119,7 @@ class Alerts
             );
         }
 
-        if ($this->server->startQuiesce($duration)) {
+        if ($this->processor->quiesce($duration)) {
             return new HttpResponse(
                 200,
                 ['Content-Type' => 'application/json'],

@@ -1,5 +1,11 @@
 <?php
+
 namespace SeanKndy\AlertManager\Scheduling;
+
+use DateTime, DateTimeZone;
+use DateInterval, DatePeriod;
+use InvalidArgumentException;
+
 /**
  * Basic scheduling that supports daily or weekly repetition.
  *
@@ -11,65 +17,77 @@ class BasicSchedule implements ScheduleInterface
     const FREQ_WEEKLY = 7;
 
     /**
-     * Start of schedule, timestamp
-     * @var int
+     * Start of schedule, EPOCH timestamp
      */
-    private $startTime;
+    private int $startTime;
     /**
-     * End of schedule
-     * @var int
+     * End of schedule, EPOCH timestamp
      */
-    private $endTime;
+    private int $endTime;
     /**
-     * Repeat frequency, FREQ_NONE, FREQ_DAILY or FREQ_WEEKLY
-     * @var int
+     * Timezone in which we're operating
      */
-    private $repeatFrequency = self::FREQ_NONE;
+    private DateTimeZone $timezone;
+    /**
+     * Repeat frequency: self::FREQ_NONE, self::FREQ_DAILY or self::FREQ_WEEKLY
+     */
+    private int $repeatFrequency = self::FREQ_NONE;
     /**
      * Repeat interval for the above frequency
-     * @var int
      */
-    private $repeatInterval = 0;
+    private int $repeatInterval = 0;
 
 
-    public function __construct(int $startTime, int $endTime)
+    /**
+     * @param DateTimeZone|string $timezone
+     * @throws InvalidArgumentException
+     */
+    public function __construct(int $startTime, int $endTime, $timezone)
     {
+        if ($startTime >= $endTime) {
+            throw new InvalidArgumentException('Start Time must be > End Time.');
+        }
+
         $this->startTime = $startTime;
         $this->endTime = $endTime;
+        $this->timezone = $timezone instanceof DateTimeZone ? $timezone : new DateTimeZone($timezone);
     }
 
-    public function setStartTime(int $time)
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function setRepeatFrequency(int $frequency): self
     {
-        $this->startTime = $time;
-    }
-
-    public function setEndTime(int $time)
-    {
-        $this->endTime = $time;
-    }
-
-    public function setRepeatFrequency(int $freq)
-    {
-        if (!\in_array($freq, [self::FREQ_NONE,self::FREQ_DAILY,self::FREQ_WEEKLY])) {
-            throw new \InvalidArgumentException("Invalid frequency.");
+        $validFrequencies = [self::FREQ_NONE, self::FREQ_DAILY, self::FREQ_WEEKLY];
+        if (!\in_array($frequency, $validFrequencies)) {
+            throw new InvalidArgumentException('Invalid frequency, must be one of [' .
+                \implode(', ', $validFrequencies) . ']');
         }
-        $this->repeatFrequency = $freq;
-        return $this;
-    }
+        $this->repeatFrequency = $frequency;
 
-    public function setRepeatInterval(int $interval)
-    {
-        $this->repeatInterval = $interval;
         return $this;
     }
 
     /**
-     * {@inheritDoc}
+     * @throws InvalidArgumentException
      */
-    public function isActive(int $atTime = 0) : bool
+    public function setRepeatInterval(int $interval): self
+    {
+        if ($interval < 0) {
+            throw new InvalidArgumentException('Interval must be >= 0.');
+        }
+        $this->repeatInterval = $interval;
+
+        return $this;
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function isActive(int $atTime = 0): bool
     {
         if (!$atTime) {
-            $atTime = \time();
+            $atTime = (new DateTime('now', $this->timezone))->getTimestamp();
         }
 
         // atTime before start time
@@ -84,30 +102,26 @@ class BasicSchedule implements ScheduleInterface
 
         // atTime is not within start/end time, check for repetition
         if ($this->repeatFrequency != self::FREQ_NONE && $this->repeatInterval > 0) {
-            // determine days since the start of schedule
-            $daysSinceStart = floor(($atTime - $this->startTime)/86400);
-            // divide that by our frequency (either daily(1) or weekly(7))
-            $numOccurrences = floor($daysSinceStart/$this->repeatFrequency);
+            $duration = $this->endTime - $this->startTime;
 
-            // if that divides cleanly, then $atTime matches
-            if ($numOccurrences % $this->repeatInterval == 0) {
-                $newStartDate = $this->startTime + ($numOccurrences * $this->repeatFrequency * 86400);
+            $period = new DatePeriod(
+                (new DateTime('now', $this->timezone))->setTimestamp($this->startTime),
+                new DateInterval('P' . $this->repeatInterval . ($this->repeatFrequency == self::FREQ_WEEKLY ? 'W' : 'D')),
+                (new DateTime('now', $this->timezone))->setTimestamp($atTime+86400)
+            );
 
-                // make a new BasicSchedule with new time frames
-                $newStartTime = \mktime(
-                    \date('H', $this->startTime),
-                    \date('i', $this->startTime),
-                    \date('s', $this->startTime),
-                    \date('n', $newStartDate),
-                    \date('j', $newStartDate),
-                    \date('Y', $newStartDate)
-                );
-                $newEndTime = $newStartTime + ($this->endTime - $this->startTime);
+            foreach ($period as $startDateTime) {
+                $endDateTime = clone $startDateTime;
+                $endDateTime->modify('+ ' . $duration . ' seconds');
 
-                return (new self($newStartTime, $newEndTime))->isActive($atTime);
+                // atTime is within start/end time
+                if ($atTime >= $startDateTime->getTimestamp() && $atTime <= $endDateTime->getTimestamp()) {
+                    return true;
+                }
             }
         }
 
         return false;
     }
+
 }

@@ -33,7 +33,7 @@ JSON should be POSTed to http://x.x.x.x:port/api/v1/alerts in the following form
 
 'name' should be a unique name for the alert, but should stay consistent between submissions if it's the same incident.
 
-'expiryDuration' is optional and will default to whatever `\SeanKndy\AlertManager\Server::defaultExpiryDuration` is set to.  It is how long before the alert is auto-expired if it has not updated.
+'expiryDuration' is optional and will default to whatever `\SeanKndy\AlertManager\Alerts\Alert::$defaultExpiryDuration` is set to.  It is how long before the alert is auto-expired if it has not updated.
 
 'state' is optional and defaults to `ACTIVE`.  It can be `ACTIVE`, `INACTIVE`, `ACKNOWLEDGED` or `RECOVERED`.
 
@@ -52,7 +52,7 @@ auto-resolve, or you can submit the alert with status set to `RECOVERED` to expi
 
 ```php
 <?php
-use SeanKndy\AlertManager\Server;
+use SeanKndy\AlertManager\Alerts\Processor;
 use SeanKndy\AlertManager\Routing\Route;
 use SeanKndy\AlertManager\Routing\Router;
 use SeanKndy\AlertManager\Receivers\Email;
@@ -90,7 +90,11 @@ $router = (new Router())->addRoutes([
     Route::toDestination($rob)->where('tag', 'switching')
 ]);
 
-$server = new \SeanKndy\AlertManager\Server('0.0.0.0:8514', $loop, $router);
+$server = new \SeanKndy\AlertManager\Http\Server(
+    $loop,
+    '0.0.0.0:8514',
+    new \SeanKndy\AlertManager\Alerts\Processor($loop, $router)
+);
 $loop->run();
 ```
 
@@ -208,4 +212,4 @@ Note that both Scheduling and Filtering expect simple boolean return values, so 
 
 An alert preprocessor gives you the ability to process or act on every Alert prior to it being queued to the server.  A preprocessor has the ability to mutate any alert prior to queueing.  Every preprocessor pushed to the server will run in the order they were pushed, one after the next.
 
-You may develop your own alert pre-processers by implementing `\SeanKndy\AlertManager\Preprocessors\PreprocessorInterface` and then tell the server about it with `Server::pushPreprocessor($preprocessor)`.
+You may develop your own alert pre-processors by implementing `\SeanKndy\AlertManager\Preprocessors\PreprocessorInterface` and then tell the alert processor about it with `$alertProcess->pushPreprocessor($preprocessor)`.

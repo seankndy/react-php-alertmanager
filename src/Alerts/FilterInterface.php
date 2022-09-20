@@ -1,4 +1,5 @@
 <?php
+
 namespace SeanKndy\AlertManager\Alerts;
 
 interface FilterInterface
@@ -10,5 +11,5 @@ interface FilterInterface
      *
      * @return bool
      */
-    public function isFiltered(Alert $alert) : bool;
+    public function isFiltered(Alert $alert): bool;
 }

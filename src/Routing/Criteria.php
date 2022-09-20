@@ -1,4 +1,5 @@
 <?php
+
 namespace SeanKndy\AlertManager\Routing;
 
 use SeanKndy\AlertManager\Alerts\Alert;
@@ -8,30 +9,23 @@ class Criteria
     const AND = 'AND';
     const OR  = 'OR';
 
-    /**
-     * @var array
-     */
-    private $criteria = [];
-    /**
-     * @var string
-     */
-    private $logic = self::AND;
+    private array $criteria;
+
+    private string $logic;
 
     public function __construct(string $logic = self::AND)
     {
+        $this->criteria = [];
         $this->logic = $logic;
     }
 
     /**
      * Add criteria
      *
-     * @param string\Criteria $key Either attribute key or another
-     *      Criteria
+     * @param string|Criteria $key Either attribute key or another Criteria
      * @param mixed $match Value for $key to match or null if key is Criteria
-     *
-     * @return self
      */
-    public function add($key, $match = null)
+    public function add($key, $match = null): self
     {
         if ($key instanceof self) {
             $this->criteria[] = $key;
@@ -42,10 +36,7 @@ class Criteria
         return $this;
     }
 
-    /**
-     * @return Criteria
-     */
-    public function where($key, $match = null)
+    public function where($key, $match = null): Criteria
     {
         if (\is_callable($key)) {
             $criteria = new self();
@@ -54,6 +45,7 @@ class Criteria
             }
             $newCriteria = new self();
             $newCriteria = $key($newCriteria);
+
             return $criteria->add($newCriteria);
         } else {
             if ($this->isOr()) {
@@ -61,18 +53,17 @@ class Criteria
                     ->add($this)
                     ->add($newCriteria = new self());
                 $newCriteria->add($key, $match);
+
                 return $criteria;
             }
 
             $this->add($key, $match);
+
             return $this;
         }
     }
 
-    /**
-     * @return Criteria
-     */
-    public function orWhere($key, $match = null)
+    public function orWhere($key, $match = null): Criteria
     {
         if (\is_callable($key)) {
             $criteria = new self(self::OR);
@@ -81,11 +72,13 @@ class Criteria
             }
             $newCriteria = new self();
             $newCriteria = $key($newCriteria);
+
             return $criteria->add($newCriteria);
         } else {
             if ($this->isOr() || ($this->isAnd() && \count($this->criteria) == 1)) {
                 $this->logic = self::OR;
                 $this->add($key, $match);
+
                 return $this;
             }
 
@@ -93,16 +86,15 @@ class Criteria
                 ->add($this)
                 ->add($newCriteria = new self());
             $newCriteria->add($key, $match);
+
             return $criteria;
         }
     }
 
     /**
-     * Does $alert match this Criteria?
-     *
-     * @return bool
+     * Does $alert match $this Criteria?
      */
-    public function matches(Alert $alert)
+    public function matches(Alert $alert): bool
     {
         if (!$this->criteria)
             return false;
@@ -158,22 +150,20 @@ class Criteria
         return $this->isOr() ? false : true;
     }
 
-    public function isOr()
+    public function isOr(): bool
     {
         return $this->logic == self::OR;
     }
 
-    public function isAnd()
+    public function isAnd(): bool
     {
         return $this->logic == self::AND;
     }
 
     /**
      * String representation of the criteria, similar to SQL WHERE syntax
-     *
-     * @return string
      */
-    public function __toString()
+    public function __toString(): string
     {
         if (!$this->criteria)
             return '';

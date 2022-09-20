@@ -1,10 +1,11 @@
 <?php
+
 namespace SeanKndy\AlertManager\Alerts;
 
 interface TemplateInterface
 {
     /**
-     * Return brief (one-liner) descripion of $alert.
+     * Return brief (one-liner) description of $alert.
      *
      * @param Alert $alert
      *

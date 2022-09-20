@@ -2,7 +2,6 @@
 namespace SeanKndy\AlertManager\Receivers;
 
 use SeanKndy\AlertManager\Alerts\Alert;
-use SeanKndy\AlertManager\Alerts\ThrottledReceiverAlert;
 use SeanKndy\AlertManager\Support\Traits\ConfigTrait;
 use React\EventLoop\LoopInterface;
 use React\Promise\PromiseInterface;
@@ -13,15 +12,13 @@ class Slack extends AbstractReceiver
 {
     use ConfigTrait;
 
-    /**
-     * @var LoopInterface
-     */
-    protected $loop;
+    protected LoopInterface $loop;
+
     /**
      * Slack member ID (i.e. W1234567890)
-     * @var string
      */
-    protected $memberId;
+    protected string $memberId;
+
 
     public function __construct($id, LoopInterface $loop,
         string $memberId, array $config)
@@ -36,10 +33,7 @@ class Slack extends AbstractReceiver
         ], $config);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public function receive(Alert $alert) : PromiseInterface
+    public function receive(Alert $alert): PromiseInterface
     {
         if (!$this->memberId || !$this->config['api_token'] || !$this->alertTemplate) {
             return \React\Promise\resolve([]);
@@ -49,13 +43,13 @@ class Slack extends AbstractReceiver
 
         $params = [
             'token' => $this->config['api_token'],
-            'user' => $this->memberId
+            'users' => $this->memberId
         ];
         return $this->asyncHttpPost(
-            'https://slack.com/api/im.open', $params
+            'https://slack.com/api/conversations.open', $params
         )->then(function ($result) use ($msg) {
             if (!isset($result->ok) || !$result->ok || !$result->channel->id) {
-                throw new \Exception("Failed response from Slack's im.open: " .
+                throw new \Exception("Failed response from Slack's conversations.open: " .
                     \json_encode($result));
             }
 
@@ -81,10 +75,8 @@ class Slack extends AbstractReceiver
      *
      * @param string $url
      * @param array $params Payload
-     *
-     * @return PromiseInterface
      */
-    private function asyncHttpPost(string $url, array $params)
+    private function asyncHttpPost(string $url, array $params): PromiseInterface
     {
         $deferred = new \React\Promise\Deferred();
 
@@ -127,17 +119,17 @@ class Slack extends AbstractReceiver
         return $deferred->promise();
     }
 
-    /**
-     * Get the memberId
-     *
-     * @return string
-     */
-    public function getMemberId()
+    public function getMemberId(): string
     {
         return $this->memberId;
     }
 
-    public function __toString()
+    public function setMemberId(string $memberId): void
+    {
+        $this->memberId = $memberId;
+    }
+
+    public function __toString(): string
     {
         return parent::__toString() . '; ' .
             'slack-member-id=' . $this->memberId;

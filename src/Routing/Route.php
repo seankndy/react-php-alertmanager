@@ -6,64 +6,50 @@ use React\Promise\PromiseInterface;
 
 class Route implements RoutableInterface
 {
-    /**
-     * @var RoutableInterface
-     */
-    protected $destination = null;
-    /**
-     * @var Criteria
-     */
-    protected $criteria = null;
+    protected ?RoutableInterface $destination = null;
+
+    protected ?Criteria $criteria = null;
 
     public function __construct(RoutableInterface $destination = null)
     {
         $this->destination = $destination;
     }
 
-    /**
-     * Create Route with destination $destination
-     *
-     * @return Route
-     */
-    public static function toDestination(RoutableInterface $destination = null)
+    public static function toDestination(RoutableInterface $destination = null): self
     {
         return new self($destination);
     }
 
     /**
      * Define AND criteria
-     *
-     * @return self
      */
-    public function where($key, $match = null)
+    public function where($key, $match = null): self
     {
         if (!$this->criteria) {
             $this->criteria = new Criteria();
         }
         $this->criteria = $this->criteria->where($key, $match);
+
         return $this;
     }
 
     /**
      * Define OR criteria
-     *
-     * @return self
      */
-    public function orWhere($key, $match = null)
+    public function orWhere($key, $match = null): self
     {
         if (!$this->criteria) {
             throw new \RuntimeException("Cannot call orWhere() before where()");
         }
         $this->criteria = $this->criteria->orWhere($key, $match);
+
         return $this;
     }
 
     /**
-     * Test route on Alert
-     *
-     * @return bool
+     * Test this route on Alert
      */
-    public function test(Alert $alert)
+    public function test(Alert $alert): bool
     {
         return ($this->criteria && $this->criteria->matches($alert));
     }
@@ -71,7 +57,7 @@ class Route implements RoutableInterface
     /**
      * {@inheritDoc} Route Alert to destination
      */
-    public function route(Alert $alert) : ?PromiseInterface
+    public function route(Alert $alert): ?PromiseInterface
     {
         if (!$this->destination) {
             return \React\Promise\resolve([]);
@@ -79,55 +65,31 @@ class Route implements RoutableInterface
         return $this->destination->route($alert);
     }
 
-    /**
-     * Get the destination
-     *
-     * @return RoutableInterface|null
-     */
-    public function getDestination()
+    public function getDestination(): ?RoutableInterface
     {
         return $this->destination;
     }
 
-    /**
-     * Set the value of Destination
-     *
-     * @param RoutableInterface $destination
-     *
-     * @return self
-     */
-    public function setDestination(RoutableInterface $destination = null)
+    public function setDestination(?RoutableInterface $destination = null): self
     {
         $this->destination = $destination;
 
         return $this;
     }
 
-    /**
-     * Get value of criteria
-     *
-     * @return Criteria|null
-     */
-    public function getCriteria()
+    public function getCriteria(): ?Criteria
     {
         return $this->criteria;
     }
 
-    /**
-     * Set the value of criteria
-     *
-     * @param Criteria $criteria
-     *
-     * @return self
-     */
-    public function setCriteria(Criteria $criteria)
+    public function setCriteria(?Criteria $criteria): self
     {
         $this->criteria = $criteria;
 
         return $this;
     }
 
-    public function __toString()
+    public function __toString(): string
     {
         return 'criteria=' . (string)$this->criteria . '; ' .
             'destination=('.(\is_null($this->destination) ? 'NULL' : (string)$this->destination).')';

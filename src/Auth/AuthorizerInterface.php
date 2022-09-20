@@ -14,5 +14,5 @@ interface AuthorizerInterface
      *
      * @return PromiseInterface Return Promise<bool,\Exception>
      */
-    public function authorize(ServerRequestInterface $request) : PromiseInterface;
+    public function authorize(ServerRequestInterface $request): PromiseInterface;
 }
