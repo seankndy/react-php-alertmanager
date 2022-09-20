@@ -2,10 +2,10 @@
 
 namespace SeanKndy\AlertManager\Http\Api;
 
-interface DefinesRoutes
+interface ApiInterface
 {
     /**
      * Define the HTTP routes for an API.
      */
-    public function defineRoutes(\FastRoute\RouteCollector $routeCollector): void;
+    public function routes(\FastRoute\RouteCollector $routeCollector): void;
 }

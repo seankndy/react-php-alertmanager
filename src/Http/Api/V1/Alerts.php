@@ -5,11 +5,11 @@ namespace SeanKndy\AlertManager\Http\Api\V1;
 use React\Promise\PromiseInterface;
 use SeanKndy\AlertManager\Alerts\Alert;
 use SeanKndy\AlertManager\Alerts\Processor;
-use SeanKndy\AlertManager\Http\Api\DefinesRoutes;
+use SeanKndy\AlertManager\Http\Api\ApiInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use React\Http\Response as HttpResponse;
 
-class Alerts implements DefinesRoutes
+class Alerts implements ApiInterface
 {
     protected Processor $processor;
 
@@ -18,7 +18,7 @@ class Alerts implements DefinesRoutes
         $this->processor = $processor;
     }
 
-    public function defineRoutes(\FastRoute\RouteCollector $routeCollector): void
+    public function routes(\FastRoute\RouteCollector $routeCollector): void
     {
         $routeCollector->addRoute('GET', '/alerts', [$this, 'get']);
         $routeCollector->addRoute('POST', '/alerts', [$this, 'create']);

@@ -12,7 +12,7 @@ use React\Socket\SocketServer;
 use SeanKndy\AlertManager\Alerts\Processor;
 use SeanKndy\AlertManager\Auth\AuthorizerInterface;
 use SeanKndy\AlertManager\Http\Api;
-use SeanKndy\AlertManager\Routing\Router;
+use SeanKndy\AlertManager\Routing\RoutableInterface;
 
 class Server extends EventEmitter
 {
@@ -21,6 +21,8 @@ class Server extends EventEmitter
     private ReactHttpServer $http;
 
     private \FastRoute\Dispatcher $routeDispatcher;
+
+    private RoutableInterface $alertRouter;
 
     /**
      * Used to verify user access to API
@@ -31,13 +33,14 @@ class Server extends EventEmitter
         LoopInterface $loop,
         string $listen,
         AuthorizerInterface $authorizer,
-        Processor $alertProcessor
+        RoutableInterface $alertRouter
     ) {
         $this->loop = $loop;
         $this->authorizer = $authorizer;
+        $this->alertRouter = $alertRouter;
 
         $apis = [
-            new Api\V1\Alerts($alertProcessor)
+            new Api\V1\Alerts($this->createAlertProcessor())
         ];
 
         $this->http = new ReactHttpServer(fn(ServerRequestInterface $request) => $this->handleRequest($request));
@@ -48,7 +51,7 @@ class Server extends EventEmitter
         $this->routeDispatcher = \FastRoute\simpleDispatcher(function(\FastRoute\RouteCollector $r) use ($apis) {
             $r->addGroup('/api/v1', function (\FastRoute\RouteCollector $r) use ($apis) {
                 foreach ($apis as $api) {
-                    $api->defineRoutes($r);
+                    $api->routes($r);
                 }
             });
         });
@@ -126,5 +129,21 @@ class Server extends EventEmitter
         $this->authorizer = $authorizer;
 
         return $this;
+    }
+
+    private function createAlertProcessor(): Processor
+    {
+        $alertProcessor = new Processor($this->loop, $this->alertRouter);
+
+        /* propagate Processor's events */
+        $alertProcessor->on('alert.new', fn(...$args) => $this->emit('alert.new', [...$args]));
+        $alertProcessor->on('alert.updated', fn(...$args) => $this->emit('alert.updated', [...$args]));
+        $alertProcessor->on('alert.expired', fn(...$args) => $this->emit('alert.expired', [...$args]));
+        $alertProcessor->on('alert.deleted', fn(...$args) => $this->emit('alert.deleted', [...$args]));
+        $alertProcessor->on('quiesce.start', fn(...$args) => $this->emit('quiesce.start', [...$args]));
+        $alertProcessor->on('quiesce.end', fn(...$args) => $this->emit('quiesce.end', [...$args]));
+        $alertProcessor->on('error', fn(...$args) => $this->emit('error', [...$args]));
+
+        return $alertProcessor;
     }
 }
