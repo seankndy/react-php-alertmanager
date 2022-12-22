@@ -81,7 +81,7 @@ final class Processor extends EventEmitter implements \Iterator, \Countable
                 }
             }
             // process queue again
-            $this->loop->addTimer(1.0, function() {
+            $this->loop->addTimer(5.0, function() {
                 $this->process();
             });
         });
