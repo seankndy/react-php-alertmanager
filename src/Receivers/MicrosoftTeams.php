@@ -41,7 +41,7 @@ class MicrosoftTeams extends AbstractReceiver
             json_encode([
                 '@type' => "Message Card",
                 '@context' => "http://schema.org/extensions",
-                'summary' => "cm-event-log",
+                'summary' => $this->alertTemplate->brief($alert),
                 'themeColor' => 'fbac18',
                 'title' => '',
                 'text' => $this->alertTemplate->detail($alert),
