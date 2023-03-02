@@ -42,8 +42,8 @@ class Email extends AbstractReceiver
         // allow 'recovery_from' and 'active_from' alert attributes to override
         // global config
         $attribs = $alert->getAttributes();
-        $recovery_from = $attribs['recovery_from'] ?? $this->config['recovery_from'];
-        $active_from = $attribs['active_from'] ?? $this->config['active_from'];
+        $recovery_from = !empty($attribs['recovery_from']) ? $attribs['recovery_from'] : $this->config['recovery_from'];
+        $active_from = !empty($attribs['active_from']) ? $attribs['active_from'] : $this->config['active_from'];
 
         $env = $this->config;
         $env['from'] = $alert->isRecovered() ? $recovery_from : $active_from;
