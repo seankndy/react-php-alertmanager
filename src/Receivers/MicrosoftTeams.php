@@ -151,16 +151,18 @@ class MicrosoftTeams extends AbstractReceiver
             'type' => 'message',
             'summary' => $this->alertTemplate->brief($alert),
             'attachments' => [
-                'contentType' => 'application/vnd.microsoft.card.adaptive',
-                'contentUrl' => null,
-                'content' => [
-                    '$schema' => 'http://adaptivecards.io/schemas/adaptive-card.json',
-                    'type' => 'AdaptiveCard',
-                    'version' => '1.4',
-                    'body' => [
-                        [
-                            'type' => 'Container',
-                            'items' => $bodyItems,
+                [
+                    'contentType' => 'application/vnd.microsoft.card.adaptive',
+                    'contentUrl' => null,
+                    'content' => [
+                        '$schema' => 'http://adaptivecards.io/schemas/adaptive-card.json',
+                        'type' => 'AdaptiveCard',
+                        'version' => '1.4',
+                        'body' => [
+                            [
+                                'type' => 'Container',
+                                'items' => $bodyItems,
+                            ],
                         ],
                     ],
                 ],
