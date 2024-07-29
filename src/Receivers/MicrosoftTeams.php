@@ -115,10 +115,8 @@ class MicrosoftTeams extends AbstractReceiver
             }
 
             $bodyItems[] = [
-                [
-                    'type' => 'ColumnSet',
-                    'columns' => $columns,
-                ],
+                'type' => 'ColumnSet',
+                'columns' => $columns,
             ];
         }
 
@@ -139,7 +137,7 @@ class MicrosoftTeams extends AbstractReceiver
                             'type' => 'TextBlock',
                             'spacing' => 'None',
                             'text' => 'Created ' . date(DATE_ATOM, $alert->getCreatedAt()),
-                            'isSubtle' => 'true',
+                            'isSubtle' => true,
                             'wrap' => true,
                         ],
                     ]
