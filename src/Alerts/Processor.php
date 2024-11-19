@@ -148,16 +148,18 @@ final class Processor extends EventEmitter implements \Iterator, \Countable
         );
     }
 
+    #[\ReturnTypeWillChange]
     public function current()
     {
         return current($this->alerts);
     }
 
-    public function next()
+    public function next(): void
     {
-        return next($this->alerts);
+        next($this->alerts);
     }
 
+    #[\ReturnTypeWillChange]
     public function key()
     {
         return key($this->alerts);
@@ -168,9 +170,9 @@ final class Processor extends EventEmitter implements \Iterator, \Countable
         return key($this->alerts) !== null;
     }
 
-    public function rewind()
+    public function rewind(): void
     {
-        return reset($this->alerts);
+        reset($this->alerts);
     }
 
     public function count(): int

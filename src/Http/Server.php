@@ -5,13 +5,12 @@ namespace SeanKndy\AlertManager\Http;
 use Evenement\EventEmitter;
 use Psr\Http\Message\ServerRequestInterface;
 use React\EventLoop\LoopInterface;
-use React\Http\Response as HttpResponse;
-use React\Http\Server as ReactHttpServer;
+use React\Http\Message\Response as HttpResponse;
+use React\Http\HttpServer as ReactHttpServer;
 use React\Promise\PromiseInterface;
 use React\Socket\SocketServer;
 use SeanKndy\AlertManager\Alerts\Processor;
 use SeanKndy\AlertManager\Auth\AuthorizerInterface;
-use SeanKndy\AlertManager\Http\Api;
 use SeanKndy\AlertManager\Routing\RoutableInterface;
 
 class Server extends EventEmitter

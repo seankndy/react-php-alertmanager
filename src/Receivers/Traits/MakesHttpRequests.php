@@ -3,9 +3,8 @@
 namespace SeanKndy\AlertManager\Receivers\Traits;
 
 use React\EventLoop\LoopInterface;
-use React\HttpClient\Client;
-use React\HttpClient\Response;
 use React\Promise\PromiseInterface;
+use React\Http\Browser;
 
 trait MakesHttpRequests
 {
@@ -20,40 +19,43 @@ trait MakesHttpRequests
     ): PromiseInterface {
         $deferred = new \React\Promise\Deferred();
 
-        $client = new Client($loop);
+        $browser = new Browser(
+            new \React\Socket\Connector([
+                'timeout' => 10,
+                'tls' => [
+                    'verify_peer' => false,
+                    'verify_peer_name' => false
+                ]
+            ]),
+            $loop
+        );
 
         $headers = array_merge([
             'Content-Length' => strlen($payload)
         ], $headers);
 
-        $request = $client->request('POST', $url, $headers);
-        $request->on('response', function (Response $response) use ($url, $deferred) {
-            if (substr($response->getCode(), 0, 1) != '2') {
-                $deferred->reject(
-                    new \Exception(
-                        "Non-2xx response code from $url: " .
-                        $response->getCode()
-                    )
-                );
-                $response->close();
-                return;
-            }
-            $respBody = '';
-            $response->on('data', function ($chunk) use (&$respBody) {
-                $respBody .= $chunk;
-            });
-            $response->on('end', function() use (&$respBody, $response, $deferred) {
+        $browser
+            ->request('POST', $url, $headers, $payload)
+            ->then(function (\Psr\Http\Message\ResponseInterface $response) use ($url, $deferred) {
+                if ($response->getStatusCode() < 200 || $response->getStatusCode() > 299) {
+                    $deferred->reject(
+                        new \Exception("Non-2xx response code from $url: " . $response->getStatusCode())
+                    );
+
+                    return;
+                }
+
+                $respBody = $response->getBody()->getContents();
+
                 $headers = \array_change_key_case($response->getHeaders(), CASE_LOWER);
-                if (isset($headers['content-type']) && strstr($headers['content-type'], 'application/json')) {
+                if (isset($headers['content-type']) && in_array('application/json', $headers['content-type'])) {
                     $respBody = \json_decode(\trim($respBody));
                 }
+
                 $deferred->resolve($respBody);
+            }, function (\Exception $e) use ($deferred) {
+                $deferred->reject($e);
             });
-        });
-        $request->on('error', function (\Throwable $e) use ($deferred) {
-            $deferred->reject($e);
-        });
-        $request->end($payload);
 
         return $deferred->promise();
     }

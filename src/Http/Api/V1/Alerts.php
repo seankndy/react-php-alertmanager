@@ -7,7 +7,7 @@ use SeanKndy\AlertManager\Alerts\Alert;
 use SeanKndy\AlertManager\Alerts\Processor;
 use SeanKndy\AlertManager\Http\Api\ApiInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use React\Http\Response as HttpResponse;
+use React\Http\Message\Response as HttpResponse;
 
 class Alerts implements ApiInterface
 {
