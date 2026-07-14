@@ -9,6 +9,14 @@ use InvalidArgumentException;
 /**
  * Basic scheduling that supports daily or weekly repetition.
  *
+ * @deprecated Use the Scheduling\OnCall classes for on-call rotations, and
+ *     RecurringSchedule for plain recurring windows. BasicSchedule can only
+ *     express a single window repeating on a fixed interval from a fixed
+ *     anchor, which means a rotation has to be encoded as N staggered
+ *     schedules and a one-off change (vacation, shift swap) forces every one
+ *     of them to be rewritten. Its isActive() also walks every repetition
+ *     since the anchor, so it gets slower the further the anchor recedes into
+ *     the past. Retained for backwards compatibility.
  */
 class BasicSchedule implements ScheduleInterface
 {

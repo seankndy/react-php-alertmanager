@@ -185,7 +185,83 @@ $router->addRoute(
 
 ## Receiver Scheduling
 
-Any receivers that extend AbstractReceiver can have a time-based schedule to receive alerts.  You can use addSchedule() or setSchedules() to provide any number of `\SeanKndy\AlertManager\Scheduling\ScheduleInterface` implementations. `\SeanKndy\AlertManager\Scheduling\BasicScheduler` is a simple implementation provided with the package that you can use, or you can easily write your own scheduling logic by implementing the ScheduleInterface.  It's just one method: `public function isActive($atTime) : bool` and should return true if the given schedule is active/in effect at the timestamp $atTime, otherwise false.
+Any receivers that extend AbstractReceiver can have a time-based schedule to receive alerts.  You can use addSchedule() or setSchedules() to provide any number of `\SeanKndy\AlertManager\Scheduling\ScheduleInterface` implementations. It's just one method: `public function isActive($atTime) : bool` and should return true if the given schedule is active/in effect at the timestamp $atTime, otherwise false.
+
+A receiver's schedules are OR'd together, and its *exclusion* schedules veto them. A receiver with no schedules at all is always active.
+
+The package ships three things you can use:
+
+* **`RecurringSchedule`** and friends, for plain recurring windows ("weeknights", "business hours").
+* **`Scheduling\OnCall`**, a full on-call rotation system. See below.
+* **`BasicSchedule`**, deprecated. It can only express a single window repeating from a fixed anchor, which means a rotation has to be encoded as N staggered schedules — and one person's vacation then forces all N to be rewritten. Its `isActive()` also walks every repetition since the anchor, so it slows down as the anchor recedes into the past. Use the on-call classes instead.
+
+### Recurring windows
+
+`RecurringSchedule` is wall-clock based rather than anchored to a timestamp, so it never drifts and it survives DST. A window may wrap past midnight, which is how you say "overnight":
+
+```php
+use SeanKndy\AlertManager\Scheduling\{RecurringSchedule, DateRangeSchedule, AnyOf, AllOf, Not};
+
+// Mon–Fri, 17:00 until 08:00 the next morning
+$weeknights = RecurringSchedule::weekdays('17:00', '08:00', 'America/Denver');
+$weekends   = RecurringSchedule::weekends('America/Denver');
+
+// nights and weekends, but never on the 4th of July
+$afterHours = new AllOf([
+    new AnyOf([$weeknights, $weekends]),
+    new Not(new DateRangeSchedule($julyFourthStart, $julyFourthEnd)),
+]);
+```
+
+`AnyOf`, `AllOf`, `Not`, `AlwaysActive` and `NeverActive` compose any schedules, including your own.
+
+## On-Call Rotations
+
+A rotation is three facts and nothing else: **who is in it, in what order**; **how long a turn lasts**; and **when the first turn began**. Everything else is derived, so who's up at time T is a modulus rather than a search — the same cost whether T is tomorrow or in 2040.
+
+```php
+use SeanKndy\AlertManager\Scheduling\OnCall\{OnCallSchedule, Rotation, Layer, Override, ShiftLength, ParticipantSchedule};
+
+// three techs, week about, handing off Mondays at 08:00
+$rotation = new Rotation(
+    ['alice', 'bob', 'carl'],
+    ShiftLength::weeks(1),
+    (new DateTime('2026-01-05 08:00', new DateTimeZone('America/Denver')))->getTimestamp(),
+    'America/Denver'
+);
+```
+
+Shift length is arbitrary — `ShiftLength::weeks(1)`, `days(1)`, `hours(12)` — so day/night splits and daily rotations fall out of the same code. Handoffs are laid out on the wall clock, so an 08:00 handoff stays at 08:00 across a DST transition instead of drifting to 07:00. A turn can be held by more than one person: `new Rotation([['alice', 'bob'], ['carl', 'dave']], ...)`.
+
+**Layers** stack a rotation with the conditions under which it applies. The highest-priority layer that has anybody on call wins outright — layers do not union. Give a schedule a low-priority catch-all and it can never have a coverage hole:
+
+```php
+$fieldTechs = (new OnCallSchedule('Field Techs'))
+    ->addLayer(new Layer('fallback',    Rotation::fixed(['noc'], $tz), null,        0))
+    ->addLayer(new Layer('after hours', $rotation,                    $afterHours, 20));
+
+$fieldTechs->participantsAt($tuesdayMorning);  // ['noc']    -- after-hours layer doesn't apply
+$fieldTechs->participantsAt($tuesdayEvening);  // ['alice']  -- it does, and masks the fallback
+```
+
+**Overrides** are the reason this exists. One person covering another for a window is a single fact laid over the top of the rotation — the rotation itself is not touched, and deleting the override restores it exactly:
+
+```php
+// Alice is out next week. Bob covers.
+$fieldTechs->addOverride(new Override('bob', 'alice', $mondayEight, $nextMondayEight, 'PTO'));
+```
+
+The covering person doesn't have to be in the rotation at all.
+
+**Plugging it into a receiver.** An `OnCallSchedule` answers *"who is on call?"*; a receiver needs *"am I on call?"*. `ParticipantSchedule` is the adapter, and it's the only part of this the rest of AlertManager needs to know about:
+
+```php
+$aliceReceiver->addSchedule(new ParticipantSchedule($fieldTechs, 'alice'));
+```
+
+**Querying it.** `participantsAt($t)`, `isOnCall($who, $t)`, `shiftAt($t)`, `nextChangeAfter($t)` for handoff notifications, and `timeline($from, $to)` for a calendar view (contiguous blocks, with runs of the same people merged).
+
+**Persistence.** AlertManager holds no state, so every one of these objects round-trips through `toArray()` / `fromArray()`, and restrictions go through `ScheduleFactory` (`fromJson()` takes a nullable column straight from the database). Store the rotation as an order plus a shift length plus an anchor, rebuild the objects on each refresh, and throw them away.
 
 ## Receiver Filtering
 
