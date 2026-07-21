@@ -156,6 +156,14 @@ class MicrosoftTeams extends AbstractReceiver
                         '$schema' => 'http://adaptivecards.io/schemas/adaptive-card.json',
                         'type' => 'AdaptiveCard',
                         'version' => '1.4',
+                        // Without this Teams shows "Sent a card" as the notification
+                        // and activity feed preview.  It is the only field that works;
+                        // the summary above and any summary on the attachment or on the
+                        // card itself are all ignored.  Rendered as plain text, so the
+                        // brief template should avoid markdown.
+                        'msteams' => [
+                            'summary' => $this->alertTemplate->brief($alert),
+                        ],
                         'body' => [
                             [
                                 'type' => 'Container',
